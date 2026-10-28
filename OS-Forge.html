@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OS Forge · Crea tu propio sistema operativo web</title>
+<style>
+:root{--bg:#070a12;--p1:#0d1220;--p2:#131a2c;--bd:rgba(0,240,255,.16);--ac:#00f0ff;--ac2:#ff2d95;--tx:#e6eefc;--mut:#7d8aa5;--ok:#2bff88}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:rgba(0,240,255,.25);border-radius:4px}
+body{display:flex;flex-direction:column}
+.top{height:54px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 14px;background:var(--p1);border-bottom:1px solid var(--bd);flex-wrap:nowrap;overflow-x:auto}
+.brand{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.logo{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:18px;color:#000;background:linear-gradient(135deg,var(--ac),var(--ac2));box-shadow:0 0 18px rgba(0,240,255,.35)}
+.brand b{letter-spacing:.14em;font-size:13px}.brand small{display:block;color:var(--mut);font-size:11px}
+.actions{display:flex;gap:6px}
+.btn{padding:7px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--p2);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--ac);color:var(--ac)}
+.btn.pri{background:var(--ac);color:#001418;font-weight:700;border-color:var(--ac)}.btn.pri:hover{filter:brightness(1.1);color:#001418}
+.btn.dng:hover{border-color:#ff5470;color:#ff5470}
+.btn.sm{padding:4px 9px;font-size:12px}
+main{flex:1;display:flex;min-height:0}
+#side{width:480px;min-width:320px;max-width:75%;display:flex;flex-direction:column;background:var(--p1);min-height:0}
+#tabs{display:flex;border-bottom:1px solid var(--bd);overflow-x:auto}
+.tab{padding:11px 14px;background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);cursor:pointer;white-space:nowrap}
+.tab.on{color:var(--ac);border-bottom-color:var(--ac);font-weight:700}
+#tabbody{flex:1;overflow:auto;padding:14px}
+#rz{width:6px;cursor:col-resize;background:var(--bg);border-left:1px solid var(--bd);border-right:1px solid var(--bd)}#rz:hover{background:var(--ac)}
+#pv{flex:1;min-width:0;display:flex;flex-direction:column;background:#03050a}
+.pvbar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--p1);border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.pvbar label{display:flex;align-items:center;gap:6px;color:var(--mut);font-size:12px}
+.pvbar .sp{flex:1}
+#frameArea{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:10px;overflow:auto}
+#frame{border:1px solid var(--bd);border-radius:10px;background:#000;width:100%;height:100%;transition:width .2s,height .2s;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#con{height:110px;background:#02040a;border-top:1px solid var(--bd);display:flex;flex-direction:column;font:11.5px ui-monospace,Consolas,monospace}
+#con header{display:flex;justify-content:space-between;padding:3px 10px;color:var(--mut);background:var(--p1)}
+#conlog{flex:1;overflow:auto;padding:4px 10px}.l-error{color:#ff6b81}.l-info{color:var(--ok)}
+.sec{margin-bottom:18px;padding:12px;border:1px solid var(--bd);border-radius:12px;background:rgba(255,255,255,.02)}
+.sec h4{margin:0 0 10px;color:var(--ac);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fld{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}.fld span{color:var(--mut);font-size:12px}
+.in{width:100%;padding:7px 9px;border-radius:8px;border:1px solid var(--bd);background:#080c16;outline:none}
+.in:focus{border-color:var(--ac)}
+input[type=color].in{padding:2px;height:34px;cursor:pointer}
+.chk{display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer}
+textarea.in{font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.5;resize:vertical;white-space:pre;tab-size:2}
+.applist{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{padding:6px 11px;border-radius:999px;border:1px solid var(--bd);background:var(--p2);cursor:pointer}
+.chip.on{border-color:var(--ac);color:var(--ac);background:rgba(0,240,255,.1)}.chip.add{border-style:dashed}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.card{padding:12px;border:1px solid var(--bd);border-radius:12px;background:var(--p2);cursor:pointer}
+.card:hover{border-color:var(--ac)}.card b{display:block;margin-bottom:6px}
+.sw{display:flex;gap:4px;margin-top:6px}.sw i{width:22px;height:22px;border-radius:6px;border:1px solid rgba(255,255,255,.2)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.hint{color:var(--mut);font-size:12px;margin:6px 0}
+pre.doc{margin:0;padding:10px;border-radius:8px;background:#04060d;border:1px solid var(--bd);color:#9fe8ff;font:11.5px/1.6 ui-monospace,Consolas,monospace;white-space:pre-wrap}
+details{margin-top:10px}summary{cursor:pointer;color:var(--ac)}
+.frow{border:1px solid var(--bd);border-radius:10px;padding:8px;margin-bottom:10px;background:rgba(255,255,255,.02)}
+@media(max-width:900px){main{flex-direction:column}#side{width:100%!important;max-width:100%;height:50%}#rz{display:none}.brand small{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo">⬢</div><div><b>OS FORGE</b><small>Diseña, programa y exporta tu propio sistema operativo web</small></div></div>
+  <div class="actions">
+    <button class="btn" id="bNew">Nuevo</button>
+    <button class="btn" id="bOpen">Abrir proyecto</button>
+    <button class="btn" id="bSave">Guardar .json</button>
+    <button class="btn" id="bTab">Abrir en pestaña</button>
+    <button class="btn pri" id="bExport">⬇ Exportar OS (.html)</button>
+  </div>
+</header>
+<main>
+  <aside id="side"><nav id="tabs"></nav><div id="tabbody"></div></aside>
+  <div id="rz"></div>
+  <section id="pv">
+    <div class="pvbar">
+      <button class="btn sm" id="pReload">↻ Reiniciar OS</button>
+      <button class="btn sm dng" id="pWipe" title="Borra el sistema de archivos y ajustes guardados del preview">🧹 Borrar datos</button>
+      <label><input type="checkbox" id="fast" checked> Arranque rápido</label>
+      <label><input type="checkbox" id="autorun" checked> Reabrir última app al recargar</label>
+      <span class="sp"></span>
+      <button class="btn sm" data-vp="100%x100%">🖥 Escritorio</button>
+      <button class="btn sm" data-vp="820px x1000px">▭ Tablet</button>
+      <button class="btn sm" data-vp="390pxx780px">📱 Móvil</button>
+    </div>
+    <div id="frameArea"><iframe id="frame" sandbox="allow-scripts allow-same-origin allow-modals allow-downloads allow-popups"></iframe></div>
+    <div id="con"><header><span>Consola del OS (errores de apps y kernel)</span><button class="btn sm" id="conClear">Limpiar</button></header><div id="conlog"></div></div>
+  </section>
+</main>
+<input type="file" id="fileIn" accept=".json" hidden>
+
+<script>
+/* =====================================================================
+   RUNTIME DEL OS  —  esta función es el sistema operativo real.
+   Se ejecuta en el preview y se incrusta tal cual en el .html exportado.
+   ===================================================================== */
+function OSRuntime(CFG){
+  'use strict';
+  const D=document;
+  const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function h(tag,attrs,...kids){
+    const e=D.createElement(tag),late={};
+    for(const k in (attrs||{})){const v=attrs[k];
+      if(k==='class')e.className=v;
+      else if(k==='style')e.style.cssText=v;
+      else if(k==='value'||k==='checked'||k==='disabled')late[k]=v;
+      else if(k==='html')e.innerHTML=v;
+      else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),v);
+      else if(v!==false&&v!=null)e.setAttribute(k,v===true?'':v);}
+    kids.flat(9).forEach(c=>{if(c!=null&&c!==false)e.append(c.nodeType?c:D.createTextNode(String(c)))});
+    for(const k in late)e[k]=late[k];
+    return e;
+  }
+  const baseName=p=>String(p).split('/').filter(Boolean).pop()||'/';
+  const fmt=n=>n<1024?n+' B':(n/1024).toFixed(1)+' KB';
+  const toHex=c=>/^#[0-9a-f]{6}$/i.test(c)?c:'#000000';
+  const rgba=(hex,a)=>{hex=toHex(hex);return 'rgba('+parseInt(hex.slice(1,3),16)+','+parseInt(hex.slice(3,5),16)+','+parseInt(hex.slice(5,7),16)+','+a+')'};
+  const slug=String(CFG.name||'os').toLowerCase().replace(/[^a-z0-9]+/g,'_');
+  const KEY='osforge_'+slug+'_';
+  const FAST=!!(CFG.__preview&&CFG.__fast);
+  const log=(lvl,msg)=>{try{if(parent!==window)parent.postMessage({__oslog:1,lvl,msg:String(msg)},'*')}catch(e){}(lvl==='error'?console.error:console.log)(msg)};
+
+  const store=(()=>{const mem={};try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return{get:k=>localStorage.getItem(k),set:(k,v)=>localStorage.setItem(k,v),del:k=>localStorage.removeItem(k),keys:()=>Object.keys(localStorage)}}catch(e){return{get:k=>k in mem?mem[k]:null,set:(k,v)=>{mem[k]=String(v)},del:k=>{delete mem[k]},keys:()=>Object.keys(mem)}}})();
+  let prefs={};try{prefs=JSON.parse(store.get(KEY+'prefs')||'{}')}catch(e){}
+  const C=Object.assign({},CFG,prefs);
+  const savePrefs=()=>store.set(KEY+'prefs',JSON.stringify(prefs));
+  let installed=[];try{installed=JSON.parse(store.get(KEY+'installed')||'[]')}catch(e){}
+  const extra=[];
+  const t0=Date.now();
+  let uid=0,zTop=10,cascade=0,activeId=null,ready=false,pending=null;
+
+  /* ---------- eventos ---------- */
+  const hooks={};
+  const on=(e,f)=>{(hooks[e]=hooks[e]||[]).push(f)};
+  const emit=(e,d)=>(hooks[e]||[]).forEach(f=>{try{f(d)}catch(x){log('error','Evento '+e+': '+x.message)}});
+
+  /* ---------- estilos ---------- */
+  const CSS=`
+#os,#os *{box-sizing:border-box}
+#os{position:fixed;inset:0;overflow:hidden;background:var(--bg) center/cover no-repeat;color:var(--tx);font:13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;user-select:none;-webkit-user-select:none;--tb:46px}
+#os button,#os input,#os select,#os textarea{font:inherit;color:inherit}
+#os ::-webkit-scrollbar{width:8px;height:8px}#os ::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--ac) 35%,transparent);border-radius:4px}
+#wall{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+#desk{position:absolute;left:0;right:0;z-index:1;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:6px;padding:10px}
+#wins{position:absolute;left:0;right:0;z-index:2;pointer-events:none}
+.tb-bottom #desk,.tb-bottom #wins{top:0;bottom:var(--tb)}.tb-top #desk,.tb-top #wins{top:var(--tb);bottom:0}
+.hide{display:none!important}
+.ico{width:88px;padding:8px 4px;text-align:center;border-radius:10px;border:1px solid transparent;cursor:default}
+.ico:hover,.ico.sel{background:color-mix(in srgb,var(--ac) 16%,transparent);border-color:color-mix(in srgb,var(--ac) 45%,transparent)}
+.ico b{display:block;font-size:32px;font-weight:400;line-height:1.25}
+.ico span{display:block;font-size:11px;color:#fff;text-shadow:0 1px 3px #000,0 0 6px #000;word-break:break-word}
+.win{position:absolute;pointer-events:auto;display:flex;flex-direction:column;background:color-mix(in srgb,var(--sf) 88%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid color-mix(in srgb,var(--ac) 28%,transparent);border-radius:var(--rad);box-shadow:0 18px 50px rgba(0,0,0,.5);overflow:hidden;min-width:260px;min-height:140px}
+.win.active{border-color:var(--ac);box-shadow:0 24px 60px rgba(0,0,0,.65),0 0 26px color-mix(in srgb,var(--ac) 22%,transparent)}
+.win.max{left:0!important;top:0!important;width:100%!important;height:100%!important;border-radius:0}
+.wbar{height:34px;flex:none;display:flex;align-items:center;gap:8px;padding:0 6px 0 12px;background:color-mix(in srgb,var(--ac) 9%,transparent);border-bottom:1px solid color-mix(in srgb,var(--ac) 18%,transparent);touch-action:none}
+.wtitle{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600;font-size:12px}
+.wbtn{width:28px;height:24px;border:0;background:transparent;border-radius:6px;cursor:pointer}
+.wbtn:hover{background:rgba(128,128,128,.25)}.wbtn.x:hover{background:#e5484d;color:#fff}
+.wbody{flex:1;min-height:0;position:relative;overflow:auto;user-select:text;-webkit-user-select:text}
+.wbody iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent}
+.rs{position:absolute;z-index:5;touch-action:none}.rs.r{right:0;top:8px;bottom:8px;width:6px;cursor:ew-resize}.rs.b{bottom:0;left:8px;right:8px;height:6px;cursor:ns-resize}.rs.br{right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize}
+.ws-flat .win{backdrop-filter:none;background:var(--sf);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.ws-retro .win{border-radius:0!important;border:2px solid var(--ac);box-shadow:6px 6px 0 rgba(0,0,0,.55);backdrop-filter:none;background:var(--sf)}
+.ws-retro .wbar{background:var(--ac);color:var(--bg)}.ws-retro .wbtn:hover{background:rgba(255,255,255,.3)}
+#tb{position:absolute;left:0;right:0;height:var(--tb);z-index:900;display:flex;align-items:center;gap:6px;padding:0 8px;background:color-mix(in srgb,var(--sf) 92%,transparent);backdrop-filter:blur(16px);border:0 solid color-mix(in srgb,var(--ac) 30%,transparent)}
+.tb-bottom #tb{bottom:0;border-top-width:1px}.tb-top #tb{top:0;border-bottom-width:1px}
+.startbtn{padding:6px 12px;border-radius:9px;border:1px solid var(--ac);background:color-mix(in srgb,var(--ac) 18%,transparent);font-weight:700;cursor:pointer;white-space:nowrap}
+.startbtn:hover{background:color-mix(in srgb,var(--ac) 32%,transparent)}
+.tbapps{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0}
+.tbapp{max-width:150px;display:flex;gap:6px;align-items:center;padding:5px 10px;border-radius:8px;border:1px solid transparent;background:rgba(128,128,128,.12);cursor:pointer;white-space:nowrap}
+.tbapp.on{border-color:var(--ac);background:color-mix(in srgb,var(--ac) 20%,transparent)}.tbapp.min{opacity:.55}
+.tbapp em{font-style:normal;overflow:hidden;text-overflow:ellipsis}
+.clock{padding:4px 10px;border-radius:8px;background:rgba(128,128,128,.15);font-weight:700;color:var(--ac)}
+#start{position:absolute;left:8px;width:330px;max-width:calc(100% - 16px);max-height:72%;z-index:950;display:flex;flex-direction:column;gap:8px;padding:12px;border-radius:14px;background:color-mix(in srgb,var(--sf) 94%,transparent);backdrop-filter:blur(20px);border:1px solid var(--ac);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.tb-bottom #start{bottom:calc(var(--tb) + 8px)}.tb-top #start{top:calc(var(--tb) + 8px)}
+.suser{display:flex;align-items:center;gap:10px}.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;background:color-mix(in srgb,var(--ac) 25%,transparent);border:1px solid var(--ac)}
+.slist{overflow:auto;display:flex;flex-direction:column;gap:2px}
+.sitem{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;cursor:pointer}.sitem b{font-weight:400;font-size:20px;width:26px;text-align:center}
+.sitem:hover,.sitem.hl{background:color-mix(in srgb,var(--ac) 20%,transparent)}
+.sfoot{display:flex;gap:6px}
+.inp{padding:6px 9px;border-radius:8px;border:1px solid color-mix(in srgb,var(--ac) 35%,transparent);background:rgba(0,0,0,.25);outline:none;user-select:text;-webkit-user-select:text}.inp:focus{border-color:var(--ac)}
+.btn{padding:6px 12px;border-radius:8px;border:1px solid color-mix(in srgb,var(--ac) 40%,transparent);background:rgba(128,128,128,.14);cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--ac);color:var(--ac)}.btn.pri{background:var(--ac);color:var(--bg);border-color:var(--ac);font-weight:700}.btn.pri:hover{color:var(--bg);filter:brightness(1.1)}.btn.sm{padding:3px 8px;font-size:12px}
+.menu{position:absolute;z-index:2000;min-width:190px;padding:5px;border-radius:10px;background:color-mix(in srgb,var(--sf) 96%,transparent);backdrop-filter:blur(16px);border:1px solid var(--ac);box-shadow:0 14px 40px rgba(0,0,0,.55)}
+.mitem{padding:7px 10px;border-radius:6px;cursor:pointer}.mitem:hover{background:color-mix(in srgb,var(--ac) 22%,transparent)}.msep{height:1px;margin:4px 2px;background:color-mix(in srgb,var(--ac) 25%,transparent)}
+#toasts{position:absolute;right:12px;bottom:calc(var(--tb) + 12px);z-index:1500;display:flex;flex-direction:column;gap:8px;pointer-events:none;align-items:flex-end}
+.tb-top #toasts{bottom:12px}
+.toast{max-width:320px;padding:10px 14px;border-radius:10px;background:color-mix(in srgb,var(--sf) 95%,transparent);border:1px solid var(--ac);box-shadow:0 10px 30px rgba(0,0,0,.5);animation:tin .25s}
+.toast b{display:block;color:var(--ac);font-size:12px}@keyframes tin{from{opacity:0;transform:translateX(30px)}}
+.modal{position:absolute;inset:0;z-index:3000;display:grid;place-items:center;background:rgba(0,0,0,.5)}
+.dlg{width:min(380px,90%);padding:18px;border-radius:14px;background:var(--sf);border:1px solid var(--ac);box-shadow:0 20px 60px rgba(0,0,0,.6)}.dlg h3{margin:0 0 6px}.dlg p{margin:6px 0}.dlg .inp{width:100%;margin-top:8px}.dact{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.boot{position:absolute;inset:0;z-index:5000;background:#000;color:#9dffb9;font:13px/1.7 ui-monospace,Consolas,monospace;padding:7vh 8vw;overflow:hidden;transition:opacity .5s}
+.boot h1{margin:0 0 18px;font-size:clamp(24px,5vw,44px);letter-spacing:.2em;color:var(--ac);text-shadow:0 0 18px var(--ac)}
+.lock{position:absolute;inset:0;z-index:4500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(26px)}
+.lock .big{font-size:clamp(44px,9vw,84px);font-weight:200;letter-spacing:.04em}.lock .avatar{width:84px;height:84px;font-size:42px}
+.shake{animation:shk .35s}@keyframes shk{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.pad{padding:14px;user-select:text}.pad h3{margin:14px 0 8px;color:var(--ac);font-size:12px;letter-spacing:.08em;text-transform:uppercase}.pad h3:first-child{margin-top:0}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}.srow .inp{width:210px}.srow input[type=color]{width:60px;height:30px;padding:2px;border:0;background:none;cursor:pointer}
+.mono{font:12px/1.6 ui-monospace,Consolas,monospace}
+.term{display:flex;flex-direction:column;background:rgba(0,0,0,.82);color:#d6ffe4;font:12.5px/1.5 ui-monospace,Consolas,monospace;padding:8px 10px;cursor:text}
+.tout{flex:none}.tl{white-space:pre-wrap;word-break:break-word}.tl.cmd{color:var(--ac)}.tl.err{color:#ff7b8f}
+.trow{display:flex;gap:6px;align-items:center}.tprompt{color:var(--ac);white-space:pre}.tin{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font:inherit}
+.tool{display:flex;gap:6px;padding:6px;border-bottom:1px solid color-mix(in srgb,var(--ac) 20%,transparent);flex:none;flex-wrap:wrap}
+.flist{flex:1;overflow:auto;padding:6px}.frow{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:8px;cursor:default}
+.frow:hover{background:color-mix(in srgb,var(--ac) 12%,transparent)}.frow.sel{background:color-mix(in srgb,var(--ac) 26%,transparent)}.frow b{font-weight:400;font-size:18px}.frow .fn{flex:1}.frow em{font-style:normal;opacity:.6;font-size:11px}
+.fstat{padding:4px 10px;font-size:11px;opacity:.65;flex:none}
+.ed{flex:1;width:100%;border:0;outline:0;resize:none;padding:10px;background:rgba(0,0,0,.25);font:13px/1.55 ui-monospace,Consolas,monospace;tab-size:2;white-space:pre;overflow:auto}
+`;
+  D.head.appendChild(h('style',{},CSS));
+
+  /* ---------- DOM base ---------- */
+  const root=D.getElementById('os');
+  const cv=h('canvas',{id:'wall'}),desk=h('div',{id:'desk'}),layer=h('div',{id:'wins'}),tbApps=h('div',{class:'tbapps'}),clock=h('span',{class:'clock'}),toasts=h('div',{id:'toasts'});
+  const q=h('input',{class:'inp',placeholder:'Buscar apps…'}),slist=h('div',{class:'slist'});
+  const startEl=h('div',{id:'start',class:'hide'},
+    h('div',{class:'suser'},h('div',{class:'avatar'},C.avatar||'🧑'),h('div',{},h('b',{},C.user),h('div',{style:'opacity:.6;font-size:11px'},C.name+' '+C.version))),
+    q,slist,
+    h('div',{class:'sfoot'},h('button',{class:'btn sm',onclick:()=>{toggleStart(false);lockScreen()}},'🔒 Bloquear'),h('button',{class:'btn sm',onclick:()=>location.reload()},'↻ Reiniciar'),h('button',{class:'btn sm',onclick:shutdown},'⏻ Apagar')));
+  const tbEl=h('div',{id:'tb'},
+    h('button',{class:'startbtn',onclick:e=>{e.stopPropagation();toggleStart()}},'⬢ '+C.name),tbApps,clock,
+    h('button',{class:'wbtn',title:'Energía',onclick:e=>{const r=e.currentTarget.getBoundingClientRect();showMenu([{icon:'🔒',label:'Bloquear',fn:lockScreen},{icon:'↻',label:'Reiniciar',fn:()=>location.reload()},{icon:'⏻',label:'Apagar',fn:shutdown}],r.left-120,Math.max(8,r.top-110))}},'⏻'));
+  root.append(cv,desk,layer,tbEl,startEl,toasts);
+
+  function applyTheme(){
+    const s=root.style;
+    s.setProperty('--bg',C.bg);s.setProperty('--sf',C.surface);s.setProperty('--tx',C.text);s.setProperty('--ac',C.accent);s.setProperty('--ac2',C.accent2);s.setProperty('--rad',(C.radius==null?12:C.radius)+'px');
+    root.className='ws-'+(C.windowStyle||'glass')+' tb-'+(C.taskbar||'bottom');
+    s.backgroundImage=(C.wallpaper==='image'&&C.wallImage)?'url("'+String(C.wallImage).replace(/"/g,'%22')+'")':'none';
+  }
+
+  /* ---------- sistema de archivos virtual ---------- */
+  function norm(p,cwd){p=String(p||'');if(p[0]==='~')p='/home/user'+p.slice(1);if(p[0]!=='/')p=(cwd||'/')+'/'+p;const out=[];p.split('/').forEach(s=>{if(!s||s==='.')return;if(s==='..')out.pop();else out.push(s)});return '/'+out.join('/')}
+  let tree=null,saveT;
+  function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{try{store.set(KEY+'fs',JSON.stringify(tree))}catch(e){log('error','No se pudo guardar el VFS: '+e.message)}},150)}
+  const fs={
+    norm,
+    exists:p=>!!tree[norm(p)],
+    isDir:p=>{const n=tree[norm(p)];return !!n&&n.t==='d'},
+    read:p=>{const n=tree[norm(p)];return n&&n.t==='f'?n.c:null},
+    mkdir:p=>{p=norm(p);let cur='';p.split('/').filter(Boolean).forEach(s=>{cur+='/'+s;if(!tree[cur])tree[cur]={t:'d'};else if(tree[cur].t!=='d')throw new Error(cur+' es un archivo')});persist();return true},
+    write:(p,c)=>{p=norm(p);const par=p.slice(0,p.lastIndexOf('/'))||'/';if(par!=='/')fs.mkdir(par);if(tree[p]&&tree[p].t==='d')throw new Error(p+' es un directorio');tree[p]={t:'f',c:String(c==null?'':c)};persist();return true},
+    list:p=>{p=norm(p);if(!tree[p]||tree[p].t!=='d')throw new Error('No es un directorio: '+p);const pre=p==='/'?'/':p+'/';const res=[];for(const k in tree){if(k!==p&&k.startsWith(pre)&&!k.slice(pre.length).includes('/'))res.push({name:k.slice(pre.length),type:tree[k].t==='d'?'dir':'file',size:tree[k].t==='f'?tree[k].c.length:0})}return res.sort((a,b)=>a.type===b.type?a.name.localeCompare(b.name):a.type==='dir'?-1:1)},
+    rm:p=>{p=norm(p);if(p==='/')throw new Error('No se puede borrar /');if(!tree[p])throw new Error('No existe: '+p);Object.keys(tree).forEach(k=>{if(k===p||k.startsWith(p+'/'))delete tree[k]});persist();return true},
+    mv:(a,b)=>{a=norm(a);b=norm(b);if(!tree[a])throw new Error('No existe: '+a);if(tree[b]&&tree[b].t==='d')b=norm(b+'/'+a.split('/').pop());fs.mkdir(b.slice(0,b.lastIndexOf('/'))||'/');Object.keys(tree).filter(k=>k===a||k.startsWith(a+'/')).forEach(k=>{tree[b+k.slice(a.length)]=tree[k];delete tree[k]});persist();return true},
+    cp:(a,b)=>{a=norm(a);b=norm(b);if(!tree[a])throw new Error('No existe: '+a);if(tree[b]&&tree[b].t==='d')b=norm(b+'/'+a.split('/').pop());fs.mkdir(b.slice(0,b.lastIndexOf('/'))||'/');Object.keys(tree).filter(k=>k===a||k.startsWith(a+'/')).forEach(k=>{tree[b+k.slice(a.length)]=Object.assign({},tree[k])});persist();return true},
+    size:()=>Object.keys(tree).reduce((s,k)=>s+(tree[k].c?tree[k].c.length:0),0)
+  };
+  function seedFS(){
+    tree={'/':{t:'d'}};['/home','/home/user','/system','/tmp'].forEach(p=>tree[p]={t:'d'});
+    tree['/home/user/bienvenido.txt']={t:'f',c:'Bienvenido a '+C.name+' '+C.version+'\n\nEste sistema de archivos se guarda en tu navegador.\nAbre la Terminal y escribe "help".\n'};
+    tree['/system/os.json']={t:'f',c:JSON.stringify({name:C.name,version:C.version,user:C.user},null,2)};
+  }
+  try{const s=store.get(KEY+'fs');tree=s?JSON.parse(s):null}catch(e){tree=null}
+  if(!tree||!tree['/'])seedFS();
+  (C.files||[]).forEach(f=>{if(!f.path)return;const p=norm(f.path);if(CFG.__preview||!tree[p])fs.write(p,f.content||'')});
+
+  /* ---------- notificaciones, menús, diálogos ---------- */
+  function notify(msg,title){const t=h('div',{class:'toast'},title?h('b',{},title):null,String(msg));toasts.append(t);setTimeout(()=>t.remove(),4200)}
+  let menuEl=null;
+  function closeMenu(){if(menuEl){menuEl.remove();menuEl=null}}
+  function showMenu(items,x,y){closeMenu();menuEl=h('div',{class:'menu'},items.map(it=>it==='-'?h('div',{class:'msep'}):h('div',{class:'mitem',onclick:()=>{closeMenu();it.fn()}},(it.icon||'')+' '+it.label)));root.append(menuEl);const r=menuEl.getBoundingClientRect();menuEl.style.left=Math.max(4,Math.min(x,innerWidth-r.width-6))+'px';menuEl.style.top=Math.max(4,Math.min(y,innerHeight-r.height-6))+'px'}
+  function dlg(o){return new Promise(res=>{
+    const inp=o.input?h('input',{class:'inp',value:o.value||''}):null;
+    const close=v=>{m.remove();res(v)};
+    const ok=h('button',{class:'btn pri',onclick:()=>close(inp?inp.value:true)},o.ok||'Aceptar');
+    const m=h('div',{class:'modal'},h('div',{class:'dlg'},h('h3',{},o.title||''),o.text?h('p',{},o.text):null,inp,h('div',{class:'dact'},o.cancel===false?null:h('button',{class:'btn',onclick:()=>close(null)},'Cancelar'),ok)));
+    root.append(m);
+    if(inp){inp.focus();inp.select();inp.addEventListener('keydown',e=>{if(e.key==='Enter')ok.click();if(e.key==='Escape')close(null)})}else ok.focus();
+  })}
+
+  /* ---------- gestor de ventanas ---------- */
+  const wins=new Map();
+  function renderTaskbar(){
+    tbApps.replaceChildren(...[...wins.values()].map(w=>h('button',{class:'tbapp'+(w.id===activeId&&!w.min?' on':'')+(w.min?' min':''),title:w.title,onclick:()=>{if(w.id===activeId&&!w.min)minimize(w);else focusWin(w.id)}},h('span',{},w.icon),h('em',{},w.title))));
+  }
+  function focusWin(id){const w=wins.get(id);if(!w)return;if(w.min){w.min=false;w.el.style.display=''}if(activeId!==id){activeId=id;w.el.style.zIndex=++zTop;wins.forEach(x=>x.el.classList.toggle('active',x===w))}renderTaskbar()}
+  function minimize(w){w.min=true;w.el.style.display='none';if(activeId===w.id)activeId=null;renderTaskbar()}
+  function saveRect(w){if(!w.max&&!w.snapped)w.prev={l:w.el.offsetLeft,t:w.el.offsetTop,w:w.el.offsetWidth,h:w.el.offsetHeight}}
+  function restoreWin(w){w.el.classList.remove('max');if(w.prev){const p=w.prev;Object.assign(w.el.style,{left:p.l+'px',top:p.t+'px',width:p.w+'px',height:p.h+'px'})}w.max=false;w.snapped=false}
+  function toggleMax(w,force){const want=force===undefined?!w.max:force;if(want){saveRect(w);w.el.classList.add('max');w.max=true;w.snapped=false}else restoreWin(w)}
+  function snap(w,side){saveRect(w);const half=Math.floor(layer.clientWidth/2);Object.assign(w.el.style,{left:(side==='l'?0:half)+'px',top:'0px',width:half+'px',height:layer.clientHeight+'px'});w.snapped=true}
+  function closeWin(id){
+    const w=wins.get(id);if(!w)return;
+    try{w.onClose&&w.onClose()}catch(e){}
+    w.cleanups.forEach(f=>{try{f()}catch(e){}});
+    w.el.remove();wins.delete(id);
+    if(activeId===id){activeId=null;let top=null;wins.forEach(x=>{if(!x.min&&(!top||+x.el.style.zIndex>+top.el.style.zIndex))top=x});if(top)focusWin(top.id)}
+    renderTaskbar();emit('window:close',{id});
+  }
+  function dragStart(e,w,bar){
+    if(e.target.closest('.wbtn')||e.button>0)return;
+    const lr=layer.getBoundingClientRect();
+    if(w.max||w.snapped){const px=(e.clientX-lr.left)/lr.width;restoreWin(w);w.el.style.left=Math.max(0,e.clientX-lr.left-w.el.offsetWidth*px)+'px';w.el.style.top='0px'}
+    const sx=e.clientX-lr.left-w.el.offsetLeft,sy=e.clientY-lr.top-w.el.offsetTop;
+    bar.setPointerCapture(e.pointerId);
+    const mv=ev=>{w.el.style.left=(ev.clientX-lr.left-sx)+'px';w.el.style.top=Math.max(0,ev.clientY-lr.top-sy)+'px'};
+    const up=ev=>{bar.removeEventListener('pointermove',mv);bar.removeEventListener('pointerup',up);
+      if(ev.clientY-lr.top<6)toggleMax(w,true);else if(ev.clientX<6)snap(w,'l');else if(ev.clientX>innerWidth-6)snap(w,'r');};
+    bar.addEventListener('pointermove',mv);bar.addEventListener('pointerup',up);
+  }
+  function resizeStart(e,w,dir,t){
+    e.preventDefault();e.stopPropagation();if(w.max)return;
+    t.setPointerCapture(e.pointerId);
+    const sx=e.clientX,sy=e.clientY,sw=w.el.offsetWidth,sh=w.el.offsetHeight;w.snapped=false;
+    const mv=ev=>{if(dir!=='b')w.el.style.width=Math.max(260,sw+ev.clientX-sx)+'px';if(dir!=='r')w.el.style.height=Math.max(160,sh+ev.clientY-sy)+'px'};
+    const up=()=>{t.removeEventListener('pointermove',mv);t.removeEventListener('pointerup',up)};
+    t.addEventListener('pointermove',mv);t.addEventListener('pointerup',up);
+  }
+  function openWindow(o){
+    if(o.id&&wins.has(o.id)){focusWin(o.id);return wins.get(o.id)}
+    const id=o.id||'w'+(++uid);
+    const LW=layer.clientWidth||innerWidth,LH=layer.clientHeight||innerHeight;
+    const W=Math.min(o.w||560,LW-12),H=Math.min(o.h||380,LH-12),n=cascade++%8;
+    const el=h('div',{class:'win',style:'width:'+W+'px;height:'+H+'px;left:'+Math.max(4,Math.min(40+n*30,LW-W-4))+'px;top:'+Math.max(4,Math.min(30+n*30,LH-H-4))+'px'});
+    const w={id,el,icon:o.icon||'🗔',title:o.title||'Ventana',min:false,max:false,prev:null,cleanups:[],onClose:o.onClose};
+    const titleEl=h('span',{class:'wtitle'},w.title);
+    w.setTitle=t=>{w.title=t;titleEl.textContent=t;renderTaskbar()};
+    const bar=h('div',{class:'wbar'},h('span',{},w.icon),titleEl,
+      h('button',{class:'wbtn',title:'Minimizar',onclick:()=>minimize(w)},'–'),
+      h('button',{class:'wbtn',title:'Maximizar',onclick:()=>toggleMax(w)},'▢'),
+      h('button',{class:'wbtn x',title:'Cerrar',onclick:()=>closeWin(id)},'✕'));
+    w.body=h('div',{class:'wbody'});
+    el.append(bar,w.body);
+    ['r','b','br'].forEach(d=>{const r=h('div',{class:'rs '+d});r.addEventListener('pointerdown',e=>resizeStart(e,w,d,r));el.append(r)});
+    bar.addEventListener('pointerdown',e=>dragStart(e,w,bar));
+    bar.addEventListener('dblclick',e=>{if(!e.target.closest('.wbtn'))toggleMax(w)});
+    el.addEventListener('pointerdown',()=>focusWin(id),true);
+    layer.append(el);wins.set(id,w);
+    if(innerWidth<720)toggleMax(w,true);
+    try{o.build(w.body,w)}catch(err){log('error','Ventana '+w.title+': '+err.message)}
+    focusWin(id);emit('window:open',{id,title:w.title});
+    return w;
+  }
+
+  /* ---------- apps de usuario (iframe aislado + API os.*) ---------- */
+  const frames=new Map();
+  const SHIM='(function(){var p={},n=0;function c(m,a){return new Promise(function(res,rej){var id=++n;p[id]=[res,rej];parent.postMessage({__os:1,id:id,m:m,a:a},"*")})}'
+   +'window.addEventListener("message",function(e){var d=e.data;if(d&&d.__osr&&p[d.id]){var x=p[d.id];delete p[d.id];d.err?x[1](new Error(d.err)):x[0](d.res)}});'
+   +'var names=["fs.read","fs.write","fs.list","fs.mkdir","fs.rm","fs.exists","fs.mv","fs.cp","notify","openApp","setTitle","close","storage.get","storage.set","theme","apps"];window.os={};'
+   +'names.forEach(function(nm){var ps=nm.split("."),o=window.os;for(var i=0;i<ps.length-1;i++){o=o[ps[i]]=o[ps[i]]||{}}o[ps[ps.length-1]]=function(){return c(nm,[].slice.call(arguments))}});'
+   +'window.addEventListener("error",function(e){c("log",["error",e.message+" (línea "+e.lineno+")"])});'
+   +'window.addEventListener("unhandledrejection",function(e){c("log",["error",String(e.reason&&e.reason.message||e.reason)])});})();';
+  function appDoc(app){
+    const head='<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--bg:'+C.bg+';--sf:'+C.surface+';--tx:'+C.text+';--ac:'+C.accent+';--ac2:'+C.accent2+';--rad:'+(C.radius||12)+'px}html,body{margin:0}body{background:var(--bg);color:var(--tx);font:14px system-ui,sans-serif}button,input,textarea,select{font:inherit}</style><scr'+'ipt>'+SHIM+'</scr'+'ipt>';
+    const code=app.html||'';
+    if(/<head[^>]*>/i.test(code))return code.replace(/<head[^>]*>/i,m=>m+head);
+    if(/<html[^>]*>/i.test(code))return code.replace(/<html[^>]*>/i,m=>m+'<head>'+head+'</head>');
+    return '<!DOCTYPE html><html><head>'+head+'</head><body>'+code+'</body></html>';
+  }
+  function openHtmlApp(app){
+    return openWindow({id:'app:'+app.id,title:app.name,icon:app.icon,w:app.w,h:app.h,build(body,win){
+      const f=h('iframe',{sandbox:'allow-scripts allow-forms allow-modals allow-popups allow-pointer-lock'});
+      f.srcdoc=appDoc(app);body.append(f);
+      frames.set(f.contentWindow,{app,win});
+      win.cleanups.push(()=>frames.delete(f.contentWindow));
+    }});
+  }
+  function themeVars(){return{bg:C.bg,surface:C.surface,text:C.text,accent:C.accent,accent2:C.accent2,radius:C.radius,user:C.user,name:C.name}}
+  function rpc(ctx,m,a){
+    switch(m){
+      case 'fs.read':return fs.read(a[0]);
+      case 'fs.write':return fs.write(a[0],a[1]);
+      case 'fs.list':return fs.list(a[0]||'/');
+      case 'fs.mkdir':return fs.mkdir(a[0]);
+      case 'fs.rm':return fs.rm(a[0]);
+      case 'fs.exists':return fs.exists(a[0]);
+      case 'fs.mv':return fs.mv(a[0],a[1]);
+      case 'fs.cp':return fs.cp(a[0],a[1]);
+      case 'notify':notify(a[0],a[1]||ctx.app.name);return true;
+      case 'openApp':launch(a[0]);return true;
+      case 'setTitle':ctx.win.setTitle(String(a[0]));return true;
+      case 'close':closeWin(ctx.win.id);return true;
+      case 'storage.get':return store.get(KEY+'app_'+ctx.app.id+'_'+a[0]);
+      case 'storage.set':store.set(KEY+'app_'+ctx.app.id+'_'+a[0],String(a[1]));return true;
+      case 'theme':return themeVars();
+      case 'apps':return [...apps.values()].map(x=>({id:x.id,name:x.name,icon:x.icon}));
+      case 'log':log(a[0]||'info','['+ctx.app.name+'] '+a[1]);return true;
+    }
+    throw new Error('Método desconocido: '+m);
+  }
+  addEventListener('message',async e=>{
+    const d=e.data;if(!d)return;
+    if(d.__studio==='launch'){if(ready)launch(d.id);else pending=d.id;return}
+    if(!d.__os)return;const ctx=frames.get(e.source);if(!ctx)return;
+    try{const res=await rpc(ctx,d.m,d.a||[]);e.source.postMessage({__osr:1,id:d.id,res},'*')}
+    catch(err){e.source.postMessage({__osr:1,id:d.id,err:err.message},'*')}
+  });
+
+  /* ---------- registro de apps ---------- */
+  const apps=new Map();
+  const addApp=a=>apps.set(a.id,Object.assign({icon:'📦',w:560,h:400,desktop:true},a));
+  const BUILTIN=[
+    {id:'terminal',name:'Terminal',icon:'⌨️',w:680,h:420,open:()=>openTerminal()},
+    {id:'files',name:'Archivos',icon:'📁',w:720,h:450,open:()=>openFiles()},
+    {id:'editor',name:'Editor',icon:'📝',w:660,h:460,open:()=>openEditor(null)},
+    {id:'sysmon',name:'Monitor',icon:'📊',w:520,h:430,open:()=>openSysmon()},
+    {id:'settings',name:'Ajustes',icon:'⚙️',w:580,h:520,open:()=>openSettings()}
+  ];
+  function rebuildApps(){
+    apps.clear();
+    BUILTIN.forEach(b=>{if((C.builtins||{})[b.id]!==false)addApp(b)});
+    (CFG.apps||[]).forEach(a=>addApp(a));
+    installed.forEach(a=>addApp(Object.assign({},a,{installed:true})));
+    extra.forEach(addApp);
+  }
+  function launch(id){const a=apps.get(id);if(!a){notify('App no encontrada: '+id);return null}emit('app:open',{id:a.id,name:a.name});return a.open?a.open():openHtmlApp(a)}
+  function installApp(name,html){
+    const id='usr_'+String(name).toLowerCase().replace(/[^a-z0-9]+/g,'_')+'_'+(++uid);
+    installed.push({id,name,icon:'📦',html,w:560,h:400});store.set(KEY+'installed',JSON.stringify(installed));
+    rebuildApps();renderDesk();notify('Instalada: '+name,'Instalador');
+  }
+  function uninstallApp(id){installed=installed.filter(a=>a.id!==id);store.set(KEY+'installed',JSON.stringify(installed));if(wins.has('app:'+id))closeWin('app:'+id);rebuildApps();renderDesk()}
+  const coarse=matchMedia('(pointer:coarse)').matches;
+  function renderDesk(){
+    desk.replaceChildren(...[...apps.values()].filter(a=>a.desktop!==false).map(a=>{
+      const el=h('div',{class:'ico',title:a.name},h('b',{},a.icon),h('span',{},a.name));
+      el.addEventListener('click',e=>{e.stopPropagation();desk.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));el.classList.add('sel');if(coarse)launch(a.id)});
+      el.addEventListener('dblclick',()=>launch(a.id));
+      el.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();const it=[{icon:'▶',label:'Abrir',fn:()=>launch(a.id)}];if(a.installed)it.push({icon:'🗑',label:'Desinstalar',fn:()=>uninstallApp(a.id)});showMenu(it,e.clientX,e.clientY)});
+      return el;
+    }));
+  }
+  function toggleStart(force){
+    const open=force===undefined?startEl.classList.contains('hide'):force;
+    startEl.classList.toggle('hide',!open);
+    if(open){q.value='';renderStart('');q.focus()}
+  }
+  function renderStart(f){f=f.toLowerCase();slist.replaceChildren(...[...apps.values()].filter(a=>a.name.toLowerCase().includes(f)).map((a,i)=>h('div',{class:'sitem'+(i===0&&f?' hl':''),onclick:()=>{toggleStart(false);launch(a.id)}},h('b',{},a.icon),h('span',{},a.name))))}
+  q.addEventListener('input',()=>renderStart(q.value));
+  q.addEventListener('keydown',e=>{if(e.key==='Enter'){const f=slist.firstChild;if(f)f.click()}if(e.key==='Escape')toggleStart(false)});
+  root.addEventListener('pointerdown',e=>{if(!e.target.closest('#start,.startbtn'))toggleStart(false);if(!e.target.closest('.menu'))closeMenu()});
+  desk.addEventListener('click',()=>desk.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel')));
+  root.addEventListener('contextmenu',e=>{
+    if(e.target.closest('.win,#tb,#start,.modal,.menu'))return;
+    e.preventDefault();
+    showMenu([
+      {icon:'⌨️',label:'Abrir terminal',fn:()=>launch('terminal')},
+      {icon:'📁',label:'Abrir archivos',fn:()=>launch('files')},
+      {icon:'📄',label:'Nuevo archivo en el escritorio',fn:async()=>{const n=await dlg({title:'Nuevo archivo',input:true,value:'nota.txt'});if(n){fs.write('/home/user/'+n,'');notify('Creado '+n)}}},
+      '-',
+      {icon:'🖼',label:'Cambiar fondo',fn:()=>{const m=['particles','grid','aurora','solid'];C.wallpaper=m[(m.indexOf(C.wallpaper)+1)%m.length];prefs.wallpaper=C.wallpaper;savePrefs();applyTheme()}},
+      {icon:'⚙️',label:'Ajustes',fn:()=>launch('settings')}
+    ],e.clientX,e.clientY);
+  });
+  addEventListener('keydown',e=>{if(e.key==='Escape'){toggleStart(false);closeMenu()}});
+
+  /* ---------- fondo animado ---------- */
+  const cx=cv.getContext('2d');let W0=0,H0=0,parts=[];
+  function fit(){W0=cv.width=root.clientWidth;H0=cv.height=root.clientHeight;parts=Array.from({length:Math.min(70,Math.floor(W0*H0/24000))},()=>({x:Math.random()*W0,y:Math.random()*H0,vx:(Math.random()-.5)*.6,vy:(Math.random()-.5)*.6}))}
+  addEventListener('resize',fit);
+  function wall(t){
+    requestAnimationFrame(wall);if(D.hidden)return;
+    const m=C.wallpaper;cx.clearRect(0,0,W0,H0);if(m==='image')return;
+    cx.fillStyle=C.bg;cx.fillRect(0,0,W0,H0);
+    if(m==='particles'){
+      cx.fillStyle=C.accent;
+      parts.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>W0)p.vx*=-1;if(p.y<0||p.y>H0)p.vy*=-1;cx.globalAlpha=.8;cx.beginPath();cx.arc(p.x,p.y,1.8,0,6.3);cx.fill();
+        for(let j=i+1;j<parts.length;j++){const o=parts[j],d=Math.hypot(p.x-o.x,p.y-o.y);if(d<120){cx.globalAlpha=(1-d/120)*.35;cx.strokeStyle=C.accent;cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(o.x,o.y);cx.stroke()}}});
+      cx.globalAlpha=1;
+    }else if(m==='grid'){
+      const hy=H0*.55;const g=cx.createLinearGradient(0,hy-H0*.25,0,hy);g.addColorStop(0,C.accent2);g.addColorStop(1,C.accent);
+      cx.fillStyle=g;cx.beginPath();cx.arc(W0/2,hy-H0*.04,Math.min(W0,H0)*.2,0,6.3);cx.fill();
+      cx.fillStyle=C.bg;cx.fillRect(0,hy,W0,H0-hy);
+      cx.strokeStyle=C.accent2;cx.globalAlpha=.55;cx.lineWidth=1;
+      for(let i=-24;i<=24;i++){cx.beginPath();cx.moveTo(W0/2,hy);cx.lineTo(W0/2+i*W0/7,H0);cx.stroke()}
+      const ph=(t/1400)%1;for(let k=0;k<16;k++){const p=(k+ph)/16,y=hy+(H0-hy)*p*p;cx.beginPath();cx.moveTo(0,y);cx.lineTo(W0,y);cx.stroke()}
+      cx.globalAlpha=1;
+    }else if(m==='aurora'){
+      [[C.accent,.0007,0],[C.accent2,.0005,2],[C.accent,.0004,4]].forEach(([c,s,o],i)=>{
+        const x=W0*(.5+.4*Math.sin(t*s+o)),y=H0*(.5+.35*Math.cos(t*s*1.3+o)),r=Math.max(W0,H0)*.5;
+        const g=cx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,rgba(c,.38));g.addColorStop(1,rgba(c,0));cx.fillStyle=g;cx.fillRect(0,0,W0,H0)});
+    }
+  }
+
+  /* ---------- shell ---------- */
+  const shell=new Map(),hist=[];
+  const sreg=(n,d,f)=>shell.set(n,{desc:d,fn:f});
+  const need=(a,n,u)=>{if(a.length<n)throw new Error('Uso: '+u)};
+  sreg('help','Lista los comandos',()=>[...shell].sort((a,b)=>a[0].localeCompare(b[0])).map(([n,c])=>n.padEnd(11)+c.desc).join('\n'));
+  sreg('clear','Limpia la pantalla',(a,t)=>t.clear());
+  sreg('pwd','Directorio actual',(a,t)=>t.cwd);
+  sreg('ls','Lista archivos (-l detalle)',(a,t)=>{const long=a.includes('-l'),p=a.filter(x=>x[0]!=='-')[0]||'.',path=norm(p,t.cwd);if(!fs.exists(path))throw new Error('No existe: '+p);if(!fs.isDir(path))return p;return fs.list(path).map(e=>long?(e.type==='dir'?'d ':'- ')+String(e.size).padStart(7)+'  '+e.name+(e.type==='dir'?'/':''):e.name+(e.type==='dir'?'/':'')).join(long?'\n':'  ')});
+  sreg('cd','Cambia de directorio',(a,t)=>{const p=norm(a[0]||'~',t.cwd);if(!fs.isDir(p))throw new Error('No es un directorio: '+(a[0]||'~'));t.setCwd(p)});
+  sreg('cat','Muestra un archivo',(a,t)=>{need(a,1,'cat <archivo>');return a.map(f=>{const c=fs.read(norm(f,t.cwd));if(c==null)throw new Error('No se puede leer: '+f);return c}).join('\n')});
+  sreg('mkdir','Crea carpetas',(a,t)=>{need(a,1,'mkdir <carpeta>');a.forEach(p=>fs.mkdir(norm(p,t.cwd)))});
+  sreg('touch','Crea archivos vacíos',(a,t)=>{need(a,1,'touch <archivo>');a.forEach(p=>{p=norm(p,t.cwd);if(!fs.exists(p))fs.write(p,'')})});
+  sreg('rm','Borra (-r para carpetas)',(a,t)=>{const r=a.includes('-r'),l=a.filter(x=>x[0]!=='-');need(l,1,'rm [-r] <ruta>');l.forEach(p=>{p=norm(p,t.cwd);if(fs.isDir(p)&&!r)throw new Error(p+' es una carpeta (usa -r)');fs.rm(p)})});
+  sreg('mv','Mueve o renombra',(a,t)=>{need(a,2,'mv <origen> <destino>');fs.mv(norm(a[0],t.cwd),norm(a[1],t.cwd))});
+  sreg('cp','Copia',(a,t)=>{need(a,2,'cp <origen> <destino>');fs.cp(norm(a[0],t.cwd),norm(a[1],t.cwd))});
+  sreg('echo','Imprime texto (usa > o >> para escribir)',a=>a.join(' '));
+  sreg('tree','Árbol de archivos',(a,t)=>{const out=[];const walk=(p,pre)=>{fs.list(p).forEach((e,i,arr)=>{const last=i===arr.length-1;out.push(pre+(last?'└─ ':'├─ ')+e.name+(e.type==='dir'?'/':''));if(e.type==='dir')walk(norm(p+'/'+e.name),pre+(last?'   ':'│  '))})};const r=norm(a[0]||'.',t.cwd);out.push(r);walk(r,'');return out.join('\n')});
+  sreg('edit','Abre un archivo en el editor',(a,t)=>{need(a,1,'edit <archivo>');openEditor(norm(a[0],t.cwd))});
+  sreg('open','Abre una app por id',a=>{need(a,1,'open <id-de-app>');if(!apps.has(a[0]))throw new Error('No existe la app "'+a[0]+'". Usa "apps".');launch(a[0])});
+  sreg('apps','Lista las apps instaladas',()=>[...apps.values()].map(a=>a.icon+' '+a.id.padEnd(16)+a.name).join('\n'));
+  sreg('run','Ejecuta un script .js del VFS',(a,t)=>{need(a,1,'run <archivo.js>');const c=fs.read(norm(a[0],t.cwd));if(c==null)throw new Error('No existe: '+a[0]);const r=new Function('os','print',c)(os,t.print);if(r!==undefined)return String(r)});
+  sreg('js','Evalúa JavaScript',(a)=>{const code=a.join(' ');let r;try{r=new Function('os','return ('+code+')')(os)}catch(e){if(e instanceof SyntaxError)r=new Function('os',code)(os);else throw e}return r===undefined?'':typeof r==='object'?JSON.stringify(r,null,2):String(r)});
+  sreg('whoami','Usuario actual',()=>C.user);
+  sreg('date','Fecha y hora',()=>new Date().toString());
+  sreg('uptime','Tiempo encendido',()=>Math.floor((Date.now()-t0)/1000)+' s');
+  sreg('neofetch','Información del sistema',()=>C.user+'@'+slug+'\n----------------\nOS:      '+C.name+' '+C.version+'\nKernel:  OSForge JS Runtime\nShell:   forge-sh\nApps:    '+apps.size+'\nVentanas:'+wins.size+'\nVFS:     '+fmt(fs.size())+'\nAcento:  '+C.accent);
+  sreg('theme','Cambia el color de acento (#hex)',a=>{need(a,1,'theme #00ffaa');if(!/^#[0-9a-f]{6}$/i.test(a[0]))throw new Error('Usa un color #rrggbb');C.accent=a[0];prefs.accent=a[0];savePrefs();applyTheme()});
+  sreg('wallpaper','Fondo: particles|grid|aurora|solid',a=>{need(a,1,'wallpaper grid');C.wallpaper=a[0];prefs.wallpaper=a[0];savePrefs();applyTheme()});
+  sreg('ps','Lista ventanas abiertas',()=>[...wins.values()].map(w=>w.id.padEnd(18)+w.title).join('\n')||'(ninguna)');
+  sreg('kill','Cierra una ventana por id',a=>{need(a,1,'kill <id>');if(!wins.has(a[0]))throw new Error('No existe: '+a[0]);closeWin(a[0])});
+  sreg('notify','Muestra una notificación',a=>notify(a.join(' '),C.name));
+  sreg('history','Historial de comandos',()=>hist.map((c,i)=>(i+1)+'  '+c).join('\n'));
+  sreg('reboot','Reinicia el OS',()=>location.reload());
+  sreg('shutdown','Apaga el OS',()=>shutdown());
+  sreg('resetfs','Borra TODOS los datos y reinicia',async()=>{if(await dlg({title:'Borrar datos',text:'Se eliminarán archivos, ajustes y apps instaladas.',ok:'Borrar'})){store.keys().filter(k=>k.startsWith(KEY)).forEach(k=>store.del(k));location.reload()}});
+
+  function openTerminal(){
+    return openWindow({id:'terminal',title:'Terminal',icon:'⌨️',w:680,h:420,build(body,win){
+      body.classList.add('term');
+      const out=h('div',{class:'tout'}),prompt=h('span',{class:'tprompt'}),inp=h('input',{class:'tin',spellcheck:'false',autocomplete:'off',autocapitalize:'off'});
+      body.append(out,h('div',{class:'trow'},prompt,inp));
+      body.addEventListener('click',()=>{if(!getSelection().toString())inp.focus()});
+      let cwd='/home/user',hi=0;
+      const print=(s,c)=>{const d=h('div',{class:'tl '+(c||'')});d.textContent=s;out.append(d);body.scrollTop=body.scrollHeight};
+      const setPrompt=()=>{prompt.textContent=C.user+'@'+slug+':'+(cwd==='/home/user'?'~':cwd)+'$ '};
+      setPrompt();
+      print(C.name+' '+C.version+' — escribe "help" para ver los comandos.');
+      async function run(line){
+        const toks=(line.match(/"[^"]*"|'[^']*'|\S+/g)||[]).map(s=>/^["']/.test(s)?s.slice(1,-1):s);
+        let redir=null,rpath=null;const ri=toks.findIndex(x=>x==='>'||x==='>>');
+        if(ri>-1){redir=toks[ri];rpath=toks[ri+1];toks.splice(ri)}
+        const name=toks.shift(),c=shell.get(name);
+        if(!c){print(name+': comando no encontrado. Escribe "help".','err');return}
+        let buf='';
+        const ctx={get cwd(){return cwd},setCwd:p=>{cwd=p;setPrompt()},print:s=>{if(redir)buf+=s+'\n';else print(s)},clear:()=>out.replaceChildren(),win};
+        try{
+          const r=await c.fn(toks,ctx);
+          if(typeof r==='string'&&r!=='')ctx.print(r);
+          if(redir){if(!rpath)throw new Error('Falta el archivo tras '+redir);const p=norm(rpath,cwd);fs.write(p,(redir==='>>'?(fs.read(p)||''):'')+buf)}
+        }catch(err){print(String(err&&err.message||err),'err')}
+      }
+      function complete(){
+        const v=inp.value,parts=v.split(' '),last=parts[parts.length-1];
+        let cands;
+        if(parts.length===1)cands=[...shell.keys()].filter(n=>n.startsWith(last));
+        else{const full=norm(last||'.',cwd),dir=last.endsWith('/')||!last?full:full.slice(0,full.lastIndexOf('/'))||'/',stem=last.endsWith('/')||!last?'':full.split('/').pop();
+          try{cands=fs.list(dir).filter(e=>e.name.startsWith(stem)).map(e=>(last.slice(0,last.length-stem.length))+e.name+(e.type==='dir'?'/':''))}catch(e){cands=[]}}
+        if(cands.length===1){parts[parts.length-1]=cands[0];inp.value=parts.join(' ')+(parts.length===1?' ':'')}
+        else if(cands.length>1)print(cands.join('  '));
+      }
+      inp.addEventListener('keydown',async e=>{
+        if(e.key==='Enter'){const line=inp.value;inp.value='';print(prompt.textContent+line,'cmd');if(line.trim()){hist.push(line);hi=hist.length;await run(line)}body.scrollTop=body.scrollHeight}
+        else if(e.key==='ArrowUp'){e.preventDefault();if(hi>0)inp.value=hist[--hi]}
+        else if(e.key==='ArrowDown'){e.preventDefault();inp.value=hi<hist.length-1?hist[++hi]:(hi=hist.length,'')}
+        else if(e.key==='Tab'){e.preventDefault();complete()}
+        else if(e.key==='l'&&e.ctrlKey){e.preventDefault();out.replaceChildren()}
+      });
+      setTimeout(()=>inp.focus(),30);
+    }});
+  }
+
+  /* ---------- Archivos ---------- */
+  const iconFor=n=>({js:'📜',html:'🌐',htm:'🌐',json:'🧾',md:'📘',css:'🎨'}[(n.split('.').pop()||'').toLowerCase()]||'📄');
+  function openPath(p){if(/\.html?$/i.test(p)){launchViewer(baseName(p),fs.read(p)||'')}else openEditor(p)}
+  function launchViewer(name,html){openHtmlApp({id:'view_'+(++uid),name:name,icon:'🌐',html,w:620,h:430})}
+  function openFiles(start){
+    return openWindow({id:'files',title:'Archivos',icon:'📁',w:720,h:450,build(body){
+      body.style.cssText='display:flex;flex-direction:column;overflow:hidden';
+      let cwd=start||'/home/user',sel=null;
+      const pin=h('input',{class:'inp',style:'flex:1;min-width:120px',onkeydown:e=>{if(e.key==='Enter')go(pin.value)}});
+      const list=h('div',{class:'flist'}),stat=h('div',{class:'fstat'}),up=h('input',{type:'file',multiple:true,style:'display:none'});
+      const full=n=>norm(cwd+'/'+n);
+      const go=p=>{p=norm(p,cwd);if(!fs.isDir(p)){notify('No es una carpeta: '+p);return}cwd=p;sel=null;render()};
+      const openItem=it=>it.type==='dir'?go(full(it.name)):openPath(full(it.name));
+      function render(){
+        pin.value=cwd;const items=fs.list(cwd);
+        list.replaceChildren(...items.map(it=>{
+          const row=h('div',{class:'frow'},h('b',{},it.type==='dir'?'📁':iconFor(it.name)),h('span',{class:'fn'},it.name),h('em',{},it.type==='dir'?'':fmt(it.size)));
+          row.onclick=()=>{list.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));row.classList.add('sel');sel=it};
+          row.ondblclick=()=>openItem(it);
+          row.oncontextmenu=e=>{e.preventDefault();e.stopPropagation();row.click();showMenu([{icon:'▶',label:'Abrir',fn:()=>openItem(it)},{icon:'✏️',label:'Renombrar',fn:rename},{icon:'🗑',label:'Borrar',fn:del}],e.clientX,e.clientY)};
+          return row}));
+        stat.textContent=items.length+' elementos · '+cwd;
+      }
+      const mk=async dir=>{const n=await dlg({title:dir?'Nueva carpeta':'Nuevo archivo',input:true,value:dir?'carpeta':'archivo.txt'});if(!n)return;dir?fs.mkdir(full(n)):fs.write(full(n),'');render()};
+      const rename=async()=>{if(!sel)return notify('Selecciona algo primero');const n=await dlg({title:'Renombrar',input:true,value:sel.name});if(n&&n!==sel.name){fs.mv(full(sel.name),full(n));render()}};
+      const del=async()=>{if(!sel)return notify('Selecciona algo primero');if(await dlg({title:'Borrar',text:'¿Borrar "'+sel.name+'"?',ok:'Borrar'})){fs.rm(full(sel.name));sel=null;render()}};
+      const dl=()=>{if(!sel||sel.type!=='file')return notify('Selecciona un archivo');const a=h('a',{href:URL.createObjectURL(new Blob([fs.read(full(sel.name))])),download:sel.name});a.click()};
+      up.onchange=()=>{[...up.files].forEach(f=>{const r=new FileReader();r.onload=()=>{fs.write(full(f.name),r.result);render()};r.readAsText(f)});up.value=''};
+      const b=(t,tt,fn)=>h('button',{class:'btn sm',title:tt,onclick:fn},t);
+      body.append(h('div',{class:'tool'},b('⬆','Subir nivel',()=>go(cwd+'/..')),pin,b('📄+','Nuevo archivo',()=>mk(false)),b('📁+','Nueva carpeta',()=>mk(true)),b('✏️','Renombrar',rename),b('🗑','Borrar',del),b('⬇','Descargar',dl),b('📤','Subir archivo de texto',()=>up.click()),up),list,stat);
+      render();
+    }});
+  }
+
+  /* ---------- Editor ---------- */
+  function openEditor(p){
+    const id=p?'edit:'+p:'edit:new'+(++uid);
+    return openWindow({id,title:p?baseName(p):'Sin título',icon:'📝',w:660,h:460,build(body,win){
+      body.style.cssText='display:flex;flex-direction:column;overflow:hidden';
+      let path=p||null,dirty=false;
+      const ta=h('textarea',{class:'ed',spellcheck:'false',value:path?(fs.read(path)||''):''}),stat=h('div',{class:'fstat'});
+      const mark=()=>{win.setTitle((dirty?'● ':'')+(path?baseName(path):'Sin título'));stat.textContent=(path||'(sin guardar)')+' · '+ta.value.split('\n').length+' líneas · Ctrl+S guarda'};
+      const save=async()=>{if(!path){const n=await dlg({title:'Guardar como',input:true,value:'/home/user/sin-titulo.txt'});if(!n)return;path=norm(n)}fs.write(path,ta.value);dirty=false;mark();notify('Guardado: '+path)};
+      const runIt=()=>{const nm=path||'';if(/\.html?$/i.test(nm)||/^\s*</.test(ta.value))launchViewer(nm?baseName(nm):'Vista previa',ta.value);else{try{new Function('os',ta.value)(os);notify('Script ejecutado')}catch(e){notify('Error: '+e.message,'Script')}}};
+      const inst=()=>{const n=path?baseName(path).replace(/\.[^.]+$/,''):'MiApp';installApp(n,ta.value)};
+      ta.addEventListener('input',()=>{dirty=true;mark()});
+      ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();ta.setRangeText('  ',ta.selectionStart,ta.selectionEnd,'end');dirty=true;mark()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save()}});
+      body.append(h('div',{class:'tool'},h('button',{class:'btn sm',onclick:save},'💾 Guardar'),h('button',{class:'btn sm',onclick:runIt},'▶ Ejecutar / Vista previa'),h('button',{class:'btn sm',title:'Instala el HTML como una app del sistema',onclick:inst},'📦 Instalar como app')),ta,stat);
+      mark();
+    }});
+  }
+
+  /* ---------- Monitor ---------- */
+  function openSysmon(){
+    return openWindow({id:'sysmon',title:'Monitor del sistema',icon:'📊',w:520,h:430,build(body,win){
+      const g=h('canvas',{width:480,height:110,style:'width:100%;border-radius:8px;background:rgba(0,0,0,.3)'}),info=h('div',{class:'mono'}),procs=h('div',{});
+      body.append(h('div',{class:'pad'},h('h3',{},'Fotogramas por segundo'),g,h('h3',{},'Sistema'),info,h('h3',{},'Procesos (ventanas)'),procs));
+      const data=[];let last=performance.now(),fr=0,fps=0,raf;
+      const draw=()=>{const c=g.getContext('2d');c.clearRect(0,0,480,110);c.strokeStyle=C.accent;c.lineWidth=2;c.beginPath();data.forEach((v,i)=>{const x=i*8,y=105-Math.min(v,70)/70*95;i?c.lineTo(x,y):c.moveTo(x,y)});c.stroke()};
+      const loop=t=>{fr++;if(t-last>=500){fps=Math.round(fr*1000/(t-last));fr=0;last=t;data.push(fps);if(data.length>60)data.shift();draw()}raf=requestAnimationFrame(loop)};
+      raf=requestAnimationFrame(loop);
+      const upd=()=>{const m=performance.memory;info.textContent='FPS: '+fps+'\nUptime: '+Math.floor((Date.now()-t0)/1000)+' s\nMemoria JS: '+(m?(m.usedJSHeapSize/1048576).toFixed(1)+' MB':'n/d')+'\nVFS: '+fmt(fs.size())+'\nApps registradas: '+apps.size;info.style.whiteSpace='pre';
+        procs.replaceChildren(...[...wins.values()].map(w=>h('div',{class:'srow'},h('span',{},w.icon+' '+w.title+'  ',h('em',{style:'opacity:.5'},w.id)),h('button',{class:'btn sm',onclick:()=>closeWin(w.id)},'Terminar'))))};
+      upd();const iv=setInterval(upd,1000);
+      win.cleanups.push(()=>{cancelAnimationFrame(raf);clearInterval(iv)});
+    }});
+  }
+
+  /* ---------- Ajustes ---------- */
+  function openSettings(){
+    return openWindow({id:'settings',title:'Ajustes',icon:'⚙️',w:580,h:520,build(body){
+      const set=(k,v)=>{C[k]=v;prefs[k]=v;savePrefs();applyTheme()};
+      const row=(l,i)=>h('label',{class:'srow'},h('span',{},l),i);
+      const col=(l,k)=>row(l,h('input',{type:'color',value:toHex(C[k]),oninput:e=>set(k,e.target.value)}));
+      const sel=(l,k,opts)=>row(l,h('select',{class:'inp',onchange:e=>set(k,e.target.value)},opts.map(([v,t])=>h('option',{value:v,selected:C[k]===v?true:null},t))));
+      const inst=installed.map(a=>h('div',{class:'srow'},h('span',{},a.icon+' '+a.name),h('button',{class:'btn sm',onclick:()=>{uninstallApp(a.id);notify('Desinstalada')}},'Desinstalar')));
+      body.append(h('div',{class:'pad'},
+        h('h3',{},'Apariencia'),col('Color de acento','accent'),col('Color secundario','accent2'),col('Fondo','bg'),col('Superficie de ventanas','surface'),col('Texto','text'),
+        sel('Fondo de escritorio','wallpaper',[['particles','Partículas'],['grid','Synthwave'],['aurora','Aurora'],['solid','Color sólido'],['image','Imagen']]),
+        sel('Estilo de ventanas','windowStyle',[['glass','Cristal'],['flat','Plano'],['retro','Retro']]),
+        sel('Barra de tareas','taskbar',[['bottom','Abajo'],['top','Arriba']]),
+        row('Radio de esquinas',h('input',{type:'range',min:0,max:24,value:C.radius==null?12:C.radius,oninput:e=>set('radius',+e.target.value)})),
+        row('Nombre de usuario',h('input',{class:'inp',value:C.user,onchange:e=>set('user',e.target.value||'user')})),
+        h('h3',{},'Apps instaladas por el usuario'),inst.length?inst:h('div',{style:'opacity:.6'},'Ninguna. Abre un .html en el Editor y pulsa "Instalar como app".'),
+        h('h3',{},'Sistema'),h('div',{class:'mono',style:'white-space:pre'},C.name+' '+C.version+'\nMotor: OS Forge Runtime\nVFS: '+fmt(fs.size())),
+        h('div',{style:'display:flex;gap:8px;margin-top:12px;flex-wrap:wrap'},
+          h('button',{class:'btn',onclick:()=>{Object.keys(prefs).forEach(k=>delete prefs[k]);savePrefs();location.reload()}},'Restablecer apariencia'),
+          h('button',{class:'btn',onclick:()=>shell.get('resetfs').fn([],{})},'Borrar todos los datos'))));
+    }});
+  }
+
+  /* ---------- arranque, bloqueo, apagado ---------- */
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  async function bootSeq(){
+    const custom=(C.bootLines||'').trim();
+    const lines=(custom?custom.split('\n'):['Iniciando kernel {name} v{version}...','Montando sistema de archivos virtual... OK','Cargando gestor de ventanas... OK','Registrando {apps} aplicaciones... OK','Sistema listo.']).map(l=>l.replace('{name}',C.name).replace('{version}',C.version).replace('{user}',C.user).replace('{apps}',apps.size));
+    const bo=h('div',{class:'boot'},h('h1',{},C.name.toUpperCase()));root.append(bo);
+    let skip=false;const sk=()=>{skip=true};bo.addEventListener('pointerdown',sk);addEventListener('keydown',sk,{once:true});
+    for(const l of lines){bo.append(h('div',{},'> '+l));if(!skip)await sleep(260)}
+    if(!skip)await sleep(350);
+    bo.style.opacity=0;await sleep(450);bo.remove();
+  }
+  function lockScreen(){
+    return new Promise(res=>{
+      const pw=C.password?h('input',{class:'inp',type:'password',placeholder:'Contraseña',style:'width:220px;text-align:center'}):null;
+      const clk=h('div',{class:'big'},'');const tick=()=>{clk.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};tick();const iv=setInterval(tick,5000);
+      const box=h('div',{style:'display:flex;flex-direction:column;align-items:center;gap:10px'});
+      const go=()=>{if(pw&&pw.value!==C.password){box.classList.remove('shake');void box.offsetWidth;box.classList.add('shake');pw.value='';pw.placeholder='Contraseña incorrecta';return}clearInterval(iv);ov.remove();emit('login',{user:C.user});res()};
+      box.append(h('div',{class:'avatar'},C.avatar||'🧑'),h('b',{style:'font-size:16px'},C.user),pw,h('button',{class:'btn pri',onclick:go},'Entrar'));
+      const ov=h('div',{class:'lock'},clk,box);root.append(ov);
+      if(pw){pw.focus();pw.addEventListener('keydown',e=>{if(e.key==='Enter')go()})}
+    });
+  }
+  function shutdown(){const ov=h('div',{style:'position:absolute;inset:0;z-index:6000;background:#000;display:grid;place-items:center;color:#555;font:14px ui-monospace,monospace;cursor:pointer'},'Sistema apagado. Pulsa para encender.');ov.onclick=()=>location.reload();root.append(ov)}
+
+  /* ---------- API del kernel (objeto global os) ---------- */
+  const os={
+    name:C.name,version:C.version,config:C,fs,
+    notify,openApp:launch,dialog:dlg,on,emit,
+    registerApp:def=>{if(!def||!def.id)throw new Error('registerApp necesita {id,name,html}');extra.push(def);rebuildApps();renderDesk()},
+    shell:{register:sreg},
+    theme:{set:o=>{Object.assign(C,o);applyTheme()}},
+    windows:()=>[...wins.values()].map(w=>({id:w.id,title:w.title})),
+    closeWindow:closeWin
+  };
+  window.os=os;
+  function runKernel(){const code=(CFG.kernel||'').trim();if(!code)return;try{new Function('os',code)(os)}catch(e){log('error','Kernel: '+e.message);notify('Error en el kernel: '+e.message,'Kernel')}}
+
+  /* ---------- arranque ---------- */
+  (async function init(){
+    rebuildApps();applyTheme();renderDesk();fit();requestAnimationFrame(wall);
+    const tick=()=>{clock.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};tick();setInterval(tick,5000);
+    log('info','OS "'+C.name+'" iniciado. '+apps.size+' apps.');
+    if(!FAST&&C.bootEnabled!==false)await bootSeq();
+    if(!FAST&&C.lock)await lockScreen();
+    runKernel();
+    (C.autostart||[]).forEach(id=>{if(apps.has(id))launch(id)});
+    ready=true;emit('ready');
+    if(pending){launch(pending);pending=null}
+  })();
+}
+
+/* =====================================================================
+   ESTUDIO  —  editor visual del proyecto
+   ===================================================================== */
+const $=(s,r=document)=>r.querySelector(s);
+function h(tag,attrs,...kids){
+  const e=document.createElement(tag),late={};
+  for(const k in (attrs||{})){const v=attrs[k];
+    if(k==='class')e.className=v;else if(k==='style')e.style.cssText=v;
+    else if(k==='value'||k==='checked')late[k]=v;
+    else if(k.slice(0,2)==='on')e.addEventListener(k.slice(2),v);
+    else if(v!==false&&v!=null)e.setAttribute(k,v===true?'':v);}
+  kids.flat(9).forEach(c=>{if(c!=null&&c!==false)e.append(c.nodeType?c:document.createTextNode(String(c)))});
+  for(const k in late)e[k]=late[k];
+  return e;
+}
+const slugOf=n=>String(n||'os').toLowerCase().replace(/[^a-z0-9]+/g,'_');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function download(name,text,mime){const a=h('a',{href:URL.createObjectURL(new Blob([text],{type:mime||'text/plain'})),download:name});document.body.append(a);a.click();a.remove()}
+
+/* ---------- plantillas de apps ---------- */
+const APP_TPL={
+hello:{name:'Hola Mundo',icon:'👋',w:420,h:300,html:`<style>body{padding:20px}h1{color:var(--ac);margin-top:0}button{padding:8px 14px;border-radius:8px;border:1px solid var(--ac);background:transparent;color:var(--ac);cursor:pointer}</style>
+<h1>¡Hola, mundo!</h1>
+<p>Esta es una app de tu sistema operativo. Edita su código en OS Forge y verás el cambio al instante.</p>
+<button id="b">Guardar un archivo desde la app</button>
+<p id="o"></p>
+<script>
+b.onclick=async()=>{
+  await os.fs.write('/home/user/desde-la-app.txt','Escrito por una app a las '+new Date().toLocaleTimeString());
+  os.notify('Archivo creado en /home/user');
+  o.textContent='Mira la app Archivos o usa "cat desde-la-app.txt" en la Terminal.';
+};
+<\/script>`},
+notes:{name:'Notas',icon:'🗒️',w:460,h:380,html:`<style>body{display:flex;flex-direction:column;height:100vh}textarea{flex:1;background:transparent;color:var(--tx);border:0;padding:12px;resize:none;outline:none;font:14px/1.5 ui-monospace,monospace}#s{padding:6px 12px;opacity:.6;font-size:12px}</style>
+<textarea id="t" placeholder="Escribe tus notas..."></textarea><div id="s">Listo</div>
+<script>
+const P='/home/user/notas.txt';
+os.fs.read(P).then(c=>{if(c)t.value=c});
+let tm;t.oninput=()=>{s.textContent='Guardando...';clearTimeout(tm);tm=setTimeout(async()=>{await os.fs.write(P,t.value);s.textContent='Guardado ✓'},400)};
+<\/script>`},
+calc:{name:'Calculadora',icon:'🧮',w:300,h:400,html:`<style>body{padding:10px;display:flex;flex-direction:column;height:100vh;box-sizing:border-box;gap:8px}#d{background:rgba(0,0,0,.35);border-radius:8px;padding:12px;text-align:right;font:26px ui-monospace,monospace;min-height:48px;overflow:hidden}#g{flex:1;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}button{border:1px solid color-mix(in srgb,var(--ac) 40%,transparent);background:color-mix(in srgb,var(--ac) 10%,transparent);color:var(--tx);border-radius:8px;font-size:18px;cursor:pointer}button:hover{background:color-mix(in srgb,var(--ac) 28%,transparent)}</style>
+<div id="d">0</div><div id="g"></div>
+<script>
+let e='';
+['7','8','9','/','4','5','6','*','1','2','3','-','0','.','=','+','C','(',')','⌫'].forEach(k=>{
+  const b=document.createElement('button');b.textContent=k;
+  b.onclick=()=>{
+    if(k==='C')e='';
+    else if(k==='⌫')e=e.slice(0,-1);
+    else if(k==='='){try{if(!/^[0-9+\\-*/(). ]+$/.test(e))throw 0;e=String(Function('return ('+e+')')())}catch(x){e='Error'}}
+    else{if(e==='Error')e='';e+=k}
+    d.textContent=e||'0';
+  };g.appendChild(b);
+});
+<\/script>`},
+snake:{name:'Snake',icon:'🐍',w:360,h:420,html:`<style>body{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:6px}canvas{border:1px solid var(--ac);border-radius:6px;background:rgba(0,0,0,.4)}</style>
+<div id="i"></div><canvas id="c" width="320" height="320"></canvas>
+<script>
+const x=c.getContext('2d'),N=20,S=16;let sn,d,f,pts,dead,best=0;
+os.storage.get('best').then(v=>{best=+v||0});
+function reset(){sn=[{x:10,y:10}];d={x:1,y:0};f={x:5,y:5};pts=0;dead=false}
+function step(){if(dead)return;const h={x:sn[0].x+d.x,y:sn[0].y+d.y};
+  if(h.x<0||h.y<0||h.x>=N||h.y>=N||sn.some(p=>p.x==h.x&&p.y==h.y)){dead=true;if(pts>best){best=pts;os.storage.set('best',best)}return}
+  sn.unshift(h);if(h.x==f.x&&h.y==f.y){pts++;f={x:Math.random()*N|0,y:Math.random()*N|0}}else sn.pop()}
+function draw(){x.clearRect(0,0,320,320);x.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--ac');
+  sn.forEach(p=>x.fillRect(p.x*S+1,p.y*S+1,S-2,S-2));x.fillStyle='#ff4d6d';x.fillRect(f.x*S+2,f.y*S+2,S-4,S-4);
+  i.textContent='Puntos: '+pts+' · Récord: '+best+(dead?' · Fin: pulsa Espacio':' · Flechas / WASD')}
+addEventListener('keydown',e=>{const m={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]}[e.key];
+  if(m&&!(m[0]==-d.x&&m[1]==-d.y)){d={x:m[0],y:m[1]};e.preventDefault()}if(e.key==' '&&dead)reset()});
+reset();setInterval(()=>{step();draw()},110);
+<\/script>`},
+blank:{name:'App vacía',icon:'📦',w:480,h:360,html:`<h2 style="padding:0 16px;color:var(--ac)">Mi app</h2>
+<div style="padding:0 16px">
+  <p>Aquí va tu HTML, CSS y JavaScript. Dispones de <code>os.fs</code>, <code>os.storage</code>, <code>os.notify</code>... (mira la pestaña Kernel).</p>
+</div>`}
+};
+const DEFAULT_KERNEL=`// Script de arranque del kernel. Se ejecuta cuando el OS termina de iniciar.
+// Tienes el objeto global "os" (guía de la API más abajo).
+
+// 1) Añade tus propios comandos a la Terminal:
+os.shell.register('saludo','Saluda al usuario',(args,t)=>{
+  return '¡Hola, ' + (args[0] || os.config.user) + '! Bienvenido a ' + os.name;
+});
+
+// 2) Reacciona a eventos del sistema:
+os.on('ready',()=>os.notify('Sistema listo. Abre la Terminal y escribe "help".', os.name));
+`;
+const KERNEL_DOC=`API del kernel (objeto global "os")
+  os.name · os.version · os.config
+  os.fs.read(ruta) · write(ruta,texto) · list(ruta) · mkdir · rm · exists · mv · cp
+  os.notify(mensaje, titulo?)
+  os.openApp(id)  ·  os.registerApp({id,name,icon,html,w,h})
+  os.shell.register(nombre, descripcion, (args,t)=>texto)   // t.print, t.cwd, t.clear
+  os.on('ready' | 'login' | 'app:open' | 'window:open' | 'window:close', fn)
+  os.theme.set({accent:'#ff0066'})
+  os.windows() · os.closeWindow(id) · os.dialog({title,text,input})
+
+Dentro de una app (todas las llamadas devuelven Promesas)
+  os.fs.read/write/list/mkdir/rm/exists/mv/cp
+  os.storage.get(clave) · os.storage.set(clave,valor)   // datos privados de la app
+  os.notify(msg) · os.openApp(id) · os.setTitle(t) · os.close()
+  os.theme()  // colores del OS; también como variables CSS: --bg --sf --tx --ac --ac2 --rad`;
+const SNIPPETS=[
+ ['＋ Comando','\nos.shell.register("hora","Muestra la hora",()=>new Date().toLocaleTimeString());\n'],
+ ['＋ App por código','\nos.registerApp({id:"reloj",name:"Reloj",icon:"🕒",w:300,h:160,\n  html:"<h1 id=t style=text-align:center></h1><script>setInterval(()=>t.textContent=new Date().toLocaleTimeString(),500)<\\/script>"});\n'],
+ ['＋ Al iniciar sesión','\nos.on("login",()=>os.notify("Sesión iniciada como "+os.config.user));\n'],
+ ['＋ Archivo de arranque','\nif(!os.fs.exists("/home/user/log.txt"))os.fs.write("/home/user/log.txt","Primer arranque: "+new Date()+"\\n");\n']
+];
+const PRESETS=[
+ {n:'Cyberpunk',c:{bg:'#05070d',surface:'#0d121e',text:'#e6f1ff',accent:'#00f0ff',accent2:'#ff007f',wallpaper:'particles',windowStyle:'glass',radius:12,taskbar:'bottom'}},
+ {n:'Synthwave',c:{bg:'#12002b',surface:'#1d0a3d',text:'#ffe6ff',accent:'#ff2bd6',accent2:'#29d3ff',wallpaper:'grid',windowStyle:'glass',radius:10,taskbar:'bottom'}},
+ {n:'Matrix',c:{bg:'#000000',surface:'#031205',text:'#b6ffb6',accent:'#00ff41',accent2:'#008f11',wallpaper:'particles',windowStyle:'flat',radius:3,taskbar:'bottom'}},
+ {n:'Retro 95',c:{bg:'#008080',surface:'#c0c0c0',text:'#111111',accent:'#000080',accent2:'#800000',wallpaper:'solid',windowStyle:'retro',radius:0,taskbar:'bottom'}},
+ {n:'Claro minimalista',c:{bg:'#eef1f6',surface:'#ffffff',text:'#1b2330',accent:'#3b6cff',accent2:'#ff6b3b',wallpaper:'aurora',windowStyle:'flat',radius:10,taskbar:'top'}},
+ {n:'Atardecer',c:{bg:'#14080f',surface:'#241018',text:'#ffeede',accent:'#ff9a3c',accent2:'#ff3c6e',wallpaper:'aurora',windowStyle:'glass',radius:16,taskbar:'bottom'}}
+];
+
+/* ---------- proyecto ---------- */
+const LS='forge-studio-project';
+function tplApp(k){const t=APP_TPL[k];return{id:slugOf(t.name),name:t.name,icon:t.icon,w:t.w,h:t.h,desktop:true,html:t.html}}
+function defaultProject(){return{
+  name:'MiOS',version:'1.0',user:'usuario',avatar:'🧑‍💻',lock:false,password:'',bootEnabled:true,bootLines:'',
+  bg:'#05070d',surface:'#0d121e',text:'#e6f1ff',accent:'#00f0ff',accent2:'#ff007f',
+  wallpaper:'particles',wallImage:'',windowStyle:'glass',taskbar:'bottom',radius:12,
+  builtins:{terminal:true,files:true,editor:true,settings:true,sysmon:true},
+  autostart:['terminal'],
+  apps:[tplApp('hello'),tplApp('notes'),tplApp('calc'),tplApp('snake')],
+  files:[{path:'/home/user/leeme.txt',content:'Este archivo viene incluido en tu OS.\nEdítalo en la pestaña "Archivos" de OS Forge.\n'}],
+  kernel:DEFAULT_KERNEL
+}}
+function migrate(x){const d=defaultProject();const o=Object.assign(d,x);o.builtins=Object.assign(d.builtins,x.builtins||{});return o}
+let P;try{const s=localStorage.getItem(LS);P=s?migrate(JSON.parse(s)):defaultProject()}catch(e){P=defaultProject()}
+let curApp=0,tab='id',lastLaunch=null,t1;
+
+function buildOS(cfg,o){
+  o=o||{};const data=Object.assign({},cfg,{__preview:!!o.preview,__fast:!!o.fast});
+  const json=JSON.stringify(data).replace(/</g,'\\u003c').replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
+  return '<!DOCTYPE html>\n<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>'+esc(cfg.name)+'</title><style>html,body{margin:0;height:100%;overflow:hidden;background:'+esc(cfg.bg)+'}</style></head><body><div id="os"></div>\n<scr'+'ipt>\n('+OSRuntime.toString()+')('+json+');\n</scr'+'ipt></body></html>';
+}
+const frame=$('#frame');
+function reloadPreview(){frame.srcdoc=buildOS(P,{preview:true,fast:$('#fast').checked})}
+function update(){try{localStorage.setItem(LS,JSON.stringify(P))}catch(e){}clearTimeout(t1);t1=setTimeout(reloadPreview,450)}
+frame.addEventListener('load',()=>{if(lastLaunch&&$('#autorun').checked)frame.contentWindow.postMessage({__studio:'launch',id:lastLaunch},'*')});
+
+/* ---------- helpers de formulario ---------- */
+const sec=(t,...k)=>h('section',{class:'sec'},h('h4',{},t),...k);
+const g2=(...k)=>h('div',{class:'g2'},...k);
+const fText=(l,key,o)=>h('label',{class:'fld'},h('span',{},l),h('input',{class:'in',type:'text',value:P[key]==null?'':P[key],placeholder:(o&&o.ph)||'',oninput:e=>{P[key]=e.target.value;update()}}));
+const fColor=(l,key)=>h('label',{class:'fld'},h('span',{},l),h('input',{class:'in',type:'color',value:P[key],oninput:e=>{P[key]=e.target.value;update()}}));
+const fArea=(l,key,rows)=>h('label',{class:'fld'},h('span',{},l),h('textarea',{class:'in',rows:rows||3,value:P[key]||'',oninput:e=>{P[key]=e.target.value;update()}}));
+const fSel=(l,key,opts)=>h('label',{class:'fld'},h('span',{},l),h('select',{class:'in',onchange:e=>{P[key]=e.target.value;update()}},opts.map(([v,t])=>h('option',{value:v,selected:P[key]===v?true:null},t))));
+const fChk=(l,get,set)=>h('label',{class:'chk'},h('input',{type:'checkbox',checked:!!get(),onchange:e=>{set(e.target.checked);update()}}),h('span',{},l));
+const fRange=(l,key,a,b)=>h('label',{class:'fld'},h('span',{},l+': '),h('input',{type:'range',min:a,max:b,value:P[key],oninput:e=>{P[key]=+e.target.value;update()}}));
+function tabKey(ta){ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();ta.setRangeText('  ',ta.selectionStart,ta.selectionEnd,'end');ta.dispatchEvent(new Event('input'))}})}
+const BUILTIN_NAMES={terminal:'Terminal',files:'Archivos',editor:'Editor',sysmon:'Monitor',settings:'Ajustes'};
+
+/* ---------- pestañas ---------- */
+const TABS=[['id','🎨 Identidad'],['apps','📦 Apps'],['files','🗂️ Archivos'],['kernel','⚙️ Kernel'],['tpl','🧩 Plantillas']];
+function renderTabs(){$('#tabs').replaceChildren(...TABS.map(([k,l])=>h('button',{class:'tab'+(k===tab?' on':''),onclick:()=>{tab=k;renderTabs();renderBody()}},l)))}
+function renderBody(){const b=$('#tabbody');b.replaceChildren();({id:tabId,apps:tabApps,files:tabFiles,kernel:tabKernel,tpl:tabTpl})[tab](b)}
+
+function tabId(b){
+  const allApps=[...Object.keys(BUILTIN_NAMES).filter(k=>P.builtins[k]!==false).map(k=>[k,BUILTIN_NAMES[k]]),...P.apps.map(a=>[a.id,a.icon+' '+a.name])];
+  b.append(
+    sec('Identidad',g2(fText('Nombre del OS','name'),fText('Versión','version'),fText('Usuario','user'),fText('Avatar (emoji)','avatar'))),
+    sec('Arranque y acceso',
+      fChk('Mostrar pantalla de arranque',()=>P.bootEnabled,v=>P.bootEnabled=v),
+      fArea('Líneas de arranque (una por línea; vacío = por defecto). Variables: {name} {version} {user} {apps}','bootLines',3),
+      fChk('Pantalla de inicio de sesión',()=>P.lock,v=>P.lock=v),
+      fText('Contraseña (vacía = sin contraseña)','password'),
+      h('div',{class:'hint'},'La contraseña vive en el HTML exportado: sirve para ambientar, no es seguridad real.')),
+    sec('Colores',g2(fColor('Fondo','bg'),fColor('Superficie de ventanas','surface'),fColor('Texto','text'),fColor('Acento','accent'),fColor('Acento secundario','accent2'))),
+    sec('Escritorio',
+      fSel('Fondo animado','wallpaper',[['particles','Partículas'],['grid','Synthwave'],['aurora','Aurora'],['solid','Color sólido'],['image','Imagen (URL)']]),
+      fText('URL de la imagen (si el fondo es "Imagen")','wallImage',{ph:'https://…'}),
+      fSel('Estilo de ventanas','windowStyle',[['glass','Cristal'],['flat','Plano'],['retro','Retro']]),
+      fSel('Barra de tareas','taskbar',[['bottom','Abajo'],['top','Arriba']]),
+      fRange('Radio de esquinas','radius',0,24)),
+    sec('Apps del sistema incluidas',...Object.keys(BUILTIN_NAMES).map(k=>fChk(BUILTIN_NAMES[k],()=>P.builtins[k]!==false,v=>P.builtins[k]=v))),
+    sec('Abrir al iniciar',...allApps.map(([id,l])=>fChk(l,()=>P.autostart.includes(id),v=>{P.autostart=P.autostart.filter(x=>x!==id);if(v)P.autostart.push(id)})))
+  );
+}
+
+function tabApps(b){
+  const chips=[];
+  const list=h('div',{class:'applist'});
+  P.apps.forEach((a,i)=>{const c=h('button',{class:'chip'+(i===curApp?' on':''),onclick:()=>{curApp=i;renderBody()}},a.icon+' '+a.name);chips.push(c);list.append(c)});
+  list.append(h('button',{class:'chip add',onclick:()=>{const a=tplApp('blank');a.name='App '+(P.apps.length+1);a.id=uniqueId(slugOf(a.name));P.apps.push(a);curApp=P.apps.length-1;update();renderBody()}},'＋ Nueva app'));
+  b.append(list);
+  const a=P.apps[curApp];
+  if(!a){b.append(h('div',{class:'hint'},'No hay apps. Crea una con "＋ Nueva app" o carga una plantilla en la pestaña Plantillas.'));return}
+  const ta=h('textarea',{class:'in',rows:20,spellcheck:'false',value:a.html,oninput:e=>{a.html=e.target.value;update()}});tabKey(ta);
+  b.append(
+    sec('Datos de la app',
+      g2(h('label',{class:'fld'},h('span',{},'Nombre'),h('input',{class:'in',value:a.name,oninput:e=>{a.name=e.target.value;chips[curApp].textContent=a.icon+' '+a.name;update()}})),
+         h('label',{class:'fld'},h('span',{},'Icono (emoji)'),h('input',{class:'in',value:a.icon,oninput:e=>{a.icon=e.target.value||'📦';chips[curApp].textContent=a.icon+' '+a.name;update()}})),
+         h('label',{class:'fld'},h('span',{},'Ancho (px)'),h('input',{class:'in',type:'number',value:a.w,oninput:e=>{a.w=+e.target.value;update()}})),
+         h('label',{class:'fld'},h('span',{},'Alto (px)'),h('input',{class:'in',type:'number',value:a.h,oninput:e=>{a.h=+e.target.value;update()}}))),
+      fChk('Mostrar en el escritorio',()=>a.desktop!==false,v=>a.desktop=v),
+      h('div',{class:'hint'},'ID de la app: ',h('code',{},a.id),' (úsalo con os.openApp o el comando "open").')),
+    sec('Código (HTML + CSS + JS)',
+      h('div',{class:'row'},
+        h('select',{class:'in',style:'width:auto',onchange:e=>{const t=APP_TPL[e.target.value];if(t){a.html=t.html;ta.value=t.html;update()}e.target.value=''}},h('option',{value:''},'Cargar plantilla…'),Object.keys(APP_TPL).map(k=>h('option',{value:k},APP_TPL[k].icon+' '+APP_TPL[k].name))),
+        h('button',{class:'btn pri sm',onclick:()=>{lastLaunch=a.id;reloadPreviewNow();}},'▶ Abrir en preview'),
+        h('button',{class:'btn sm',onclick:()=>{const c=JSON.parse(JSON.stringify(a));c.name+=' (copia)';c.id=uniqueId(a.id);P.apps.push(c);curApp=P.apps.length-1;update();renderBody()}},'⧉ Duplicar'),
+        h('button',{class:'btn sm dng',onclick:()=>{if(confirm('¿Eliminar "'+a.name+'"?')){P.apps.splice(curApp,1);curApp=Math.max(0,curApp-1);P.autostart=P.autostart.filter(x=>x!==a.id);update();renderBody()}}},'🗑 Eliminar')),
+      ta,
+      h('div',{class:'hint'},'Tu app corre aislada en un iframe y habla con el OS mediante la API os.* (ver pestaña Kernel).'))
+  );
+}
+function uniqueId(base){let id=base||'app',n=2;while(P.apps.some(a=>a.id===id)){id=base+'_'+n++}return id}
+function reloadPreviewNow(){clearTimeout(t1);try{localStorage.setItem(LS,JSON.stringify(P))}catch(e){}if(frame.contentWindow&&frame.srcdoc){frame.contentWindow.postMessage({__studio:'launch',id:lastLaunch},'*');reloadPreview()}else reloadPreview()}
+
+function tabFiles(b){
+  b.append(h('div',{class:'hint'},'Archivos que vendrán dentro del sistema de archivos virtual de tu OS. En el preview se vuelven a copiar en cada recarga; en el OS exportado solo se crean si no existen (así no pisan los cambios del usuario).'));
+  P.files.forEach((f,i)=>{
+    const ta=h('textarea',{class:'in',rows:5,spellcheck:'false',value:f.content,oninput:e=>{f.content=e.target.value;update()}});tabKey(ta);
+    b.append(h('div',{class:'frow'},
+      h('div',{class:'row',style:'margin:0 0 6px'},h('input',{class:'in',style:'flex:1',value:f.path,placeholder:'/home/user/archivo.txt',oninput:e=>{f.path=e.target.value;update()}}),h('button',{class:'btn sm dng',onclick:()=>{P.files.splice(i,1);update();renderBody()}},'🗑')),ta));
+  });
+  b.append(h('button',{class:'btn',onclick:()=>{P.files.push({path:'/home/user/nuevo.txt',content:''});update();renderBody()}},'＋ Añadir archivo'));
+}
+
+function tabKernel(b){
+  const ta=h('textarea',{class:'in',rows:16,spellcheck:'false',value:P.kernel,oninput:e=>{P.kernel=e.target.value;update()}});tabKey(ta);
+  b.append(
+    sec('Script del kernel',
+      h('div',{class:'hint'},'JavaScript que se ejecuta al arrancar tu OS. Aquí defines comandos, apps, eventos y comportamiento del sistema.'),
+      ta,
+      h('div',{class:'row'},...SNIPPETS.map(([l,c])=>h('button',{class:'btn sm',onclick:()=>{ta.value+=c;P.kernel=ta.value;update()}},l)))),
+    sec('Guía de la API',h('pre',{class:'doc'},KERNEL_DOC))
+  );
+}
+
+function tabTpl(b){
+  b.append(sec('Temas listos',h('div',{class:'grid3'},...PRESETS.map(p=>h('div',{class:'card',onclick:()=>{Object.assign(P,p.c);update();renderBody()}},h('b',{},p.n),h('div',{class:'sw'},...[p.c.bg,p.c.surface,p.c.accent,p.c.accent2].map(c=>h('i',{style:'background:'+c})))))),
+    h('div',{class:'hint'},'Aplicar un tema cambia colores, fondo, estilo de ventanas y barra de tareas; no toca tus apps.')));
+  b.append(sec('Añadir app desde plantilla',h('div',{class:'grid3'},...Object.keys(APP_TPL).map(k=>h('div',{class:'card',onclick:()=>{const a=tplApp(k);a.id=uniqueId(a.id);P.apps.push(a);curApp=P.apps.length-1;update();tab='apps';renderTabs();renderBody()}},h('b',{},APP_TPL[k].icon+' '+APP_TPL[k].name),h('span',{class:'hint'},'Añadir'))))));
+  b.append(sec('Proyecto',h('div',{class:'row'},
+    h('button',{class:'btn dng',onclick:()=>{if(confirm('¿Reiniciar el proyecto? Se perderán los cambios no exportados.')){P=defaultProject();curApp=0;update();renderBody()}}},'Restablecer proyecto'),
+    h('button',{class:'btn',onclick:()=>{P=Object.assign(defaultProject(),{apps:[],autostart:[],files:[],kernel:'// Tu kernel vacío\n',name:'OSVacio'});curApp=0;update();renderBody()}},'Empezar desde cero (sin apps)'))));
+}
+
+/* ---------- cabecera, preview, consola ---------- */
+$('#bNew').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? Se perderán los cambios no exportados.')){P=defaultProject();curApp=0;update();renderTabs();renderBody()}};
+$('#bSave').onclick=()=>download(slugOf(P.name)+'.osforge.json',JSON.stringify(P,null,2),'application/json');
+$('#bOpen').onclick=()=>$('#fileIn').click();
+$('#fileIn').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{P=migrate(JSON.parse(r.result));curApp=0;update();renderTabs();renderBody()}catch(x){alert('Proyecto inválido: '+x.message)}};r.readAsText(f);e.target.value=''};
+$('#bExport').onclick=()=>download(slugOf(P.name)+'.html',buildOS(P,{preview:false}),'text/html');
+$('#bTab').onclick=()=>{const u=URL.createObjectURL(new Blob([buildOS(P,{preview:false})],{type:'text/html'}));window.open(u,'_blank')};
+$('#pReload').onclick=reloadPreview;
+$('#fast').onchange=reloadPreview;
+$('#pWipe').onclick=()=>{const pre='osforge_'+slugOf(P.name)+'_';try{Object.keys(localStorage).filter(k=>k.startsWith(pre)).forEach(k=>localStorage.removeItem(k))}catch(e){}reloadPreview()};
+document.querySelectorAll('[data-vp]').forEach(btn=>btn.onclick=()=>{const [w,hh]=btn.dataset.vp.split('x').map(s=>s.trim());frame.style.width=w;frame.style.height=hh});
+const conlog=$('#conlog');
+function conAdd(l,m){const d=h('div',{class:'l-'+l},'['+new Date().toLocaleTimeString()+'] '+m);conlog.append(d);while(conlog.children.length>200)conlog.firstChild.remove();conlog.scrollTop=conlog.scrollHeight}
+$('#conClear').onclick=()=>conlog.replaceChildren();
+addEventListener('message',e=>{const d=e.data;if(d&&d.__oslog&&e.source===frame.contentWindow)conAdd(d.lvl==='error'?'error':'info',d.msg)});
+(function(){const rz=$('#rz'),side=$('#side');rz.addEventListener('pointerdown',e=>{rz.setPointerCapture(e.pointerId);const mv=ev=>{side.style.width=Math.max(320,ev.clientX)+'px'};const up=()=>{rz.removeEventListener('pointermove',mv);rz.removeEventListener('pointerup',up)};rz.addEventListener('pointermove',mv);rz.addEventListener('pointerup',up)})})();
+
+renderTabs();renderBody();reloadPreview();
+</script>
+</body>
+</html>

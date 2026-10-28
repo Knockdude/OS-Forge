@@ -93,10 +93,6 @@ details{margin-top:10px}summary{cursor:pointer;color:var(--ac)}
 <input type="file" id="fileIn" accept=".json" hidden>
 
 <script>
-/* =====================================================================
-   RUNTIME DEL OS  —  esta función es el sistema operativo real.
-   Se ejecuta en el preview y se incrusta tal cual en el .html exportado.
-   ===================================================================== */
 function OSRuntime(CFG){
   'use strict';
   const D=document;
@@ -132,12 +128,10 @@ function OSRuntime(CFG){
   const t0=Date.now();
   let uid=0,zTop=10,cascade=0,activeId=null,ready=false,pending=null;
 
-  /* ---------- eventos ---------- */
   const hooks={};
   const on=(e,f)=>{(hooks[e]=hooks[e]||[]).push(f)};
   const emit=(e,d)=>(hooks[e]||[]).forEach(f=>{try{f(d)}catch(x){log('error','Evento '+e+': '+x.message)}});
 
-  /* ---------- estilos ---------- */
   const CSS=`
 #os,#os *{box-sizing:border-box}
 #os{position:fixed;inset:0;overflow:hidden;background:var(--bg) center/cover no-repeat;color:var(--tx);font:13px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;user-select:none;-webkit-user-select:none;--tb:46px}
@@ -211,7 +205,6 @@ function OSRuntime(CFG){
 `;
   D.head.appendChild(h('style',{},CSS));
 
-  /* ---------- DOM base ---------- */
   const root=D.getElementById('os');
   const cv=h('canvas',{id:'wall'}),desk=h('div',{id:'desk'}),layer=h('div',{id:'wins'}),tbApps=h('div',{class:'tbapps'}),clock=h('span',{class:'clock'}),toasts=h('div',{id:'toasts'});
   const q=h('input',{class:'inp',placeholder:'Buscar apps…'}),slist=h('div',{class:'slist'});
@@ -231,7 +224,6 @@ function OSRuntime(CFG){
     s.backgroundImage=(C.wallpaper==='image'&&C.wallImage)?'url("'+String(C.wallImage).replace(/"/g,'%22')+'")':'none';
   }
 
-  /* ---------- sistema de archivos virtual ---------- */
   function norm(p,cwd){p=String(p||'');if(p[0]==='~')p='/home/user'+p.slice(1);if(p[0]!=='/')p=(cwd||'/')+'/'+p;const out=[];p.split('/').forEach(s=>{if(!s||s==='.')return;if(s==='..')out.pop();else out.push(s)});return '/'+out.join('/')}
   let tree=null,saveT;
   function persist(){clearTimeout(saveT);saveT=setTimeout(()=>{try{store.set(KEY+'fs',JSON.stringify(tree))}catch(e){log('error','No se pudo guardar el VFS: '+e.message)}},150)}
@@ -257,7 +249,6 @@ function OSRuntime(CFG){
   if(!tree||!tree['/'])seedFS();
   (C.files||[]).forEach(f=>{if(!f.path)return;const p=norm(f.path);if(CFG.__preview||!tree[p])fs.write(p,f.content||'')});
 
-  /* ---------- notificaciones, menús, diálogos ---------- */
   function notify(msg,title){const t=h('div',{class:'toast'},title?h('b',{},title):null,String(msg));toasts.append(t);setTimeout(()=>t.remove(),4200)}
   let menuEl=null;
   function closeMenu(){if(menuEl){menuEl.remove();menuEl=null}}
@@ -271,7 +262,6 @@ function OSRuntime(CFG){
     if(inp){inp.focus();inp.select();inp.addEventListener('keydown',e=>{if(e.key==='Enter')ok.click();if(e.key==='Escape')close(null)})}else ok.focus();
   })}
 
-  /* ---------- gestor de ventanas ---------- */
   const wins=new Map();
   function renderTaskbar(){
     tbApps.replaceChildren(...[...wins.values()].map(w=>h('button',{class:'tbapp'+(w.id===activeId&&!w.min?' on':'')+(w.min?' min':''),title:w.title,onclick:()=>{if(w.id===activeId&&!w.min)minimize(w);else focusWin(w.id)}},h('span',{},w.icon),h('em',{},w.title))));
@@ -335,7 +325,6 @@ function OSRuntime(CFG){
     return w;
   }
 
-  /* ---------- apps de usuario (iframe aislado + API os.*) ---------- */
   const frames=new Map();
   const SHIM='(function(){var p={},n=0;function c(m,a){return new Promise(function(res,rej){var id=++n;p[id]=[res,rej];parent.postMessage({__os:1,id:id,m:m,a:a},"*")})}'
    +'window.addEventListener("message",function(e){var d=e.data;if(d&&d.__osr&&p[d.id]){var x=p[d.id];delete p[d.id];d.err?x[1](new Error(d.err)):x[0](d.res)}});'
@@ -389,7 +378,6 @@ function OSRuntime(CFG){
     catch(err){e.source.postMessage({__osr:1,id:d.id,err:err.message},'*')}
   });
 
-  /* ---------- registro de apps ---------- */
   const apps=new Map();
   const addApp=a=>apps.set(a.id,Object.assign({icon:'📦',w:560,h:400,desktop:true},a));
   const BUILTIN=[
@@ -447,7 +435,6 @@ function OSRuntime(CFG){
   });
   addEventListener('keydown',e=>{if(e.key==='Escape'){toggleStart(false);closeMenu()}});
 
-  /* ---------- fondo animado ---------- */
   const cx=cv.getContext('2d');let W0=0,H0=0,parts=[];
   function fit(){W0=cv.width=root.clientWidth;H0=cv.height=root.clientHeight;parts=Array.from({length:Math.min(70,Math.floor(W0*H0/24000))},()=>({x:Math.random()*W0,y:Math.random()*H0,vx:(Math.random()-.5)*.6,vy:(Math.random()-.5)*.6}))}
   addEventListener('resize',fit);
@@ -475,7 +462,6 @@ function OSRuntime(CFG){
     }
   }
 
-  /* ---------- shell ---------- */
   const shell=new Map(),hist=[];
   const sreg=(n,d,f)=>shell.set(n,{desc:d,fn:f});
   const need=(a,n,u)=>{if(a.length<n)throw new Error('Uso: '+u)};
@@ -556,7 +542,6 @@ function OSRuntime(CFG){
     }});
   }
 
-  /* ---------- Archivos ---------- */
   const iconFor=n=>({js:'📜',html:'🌐',htm:'🌐',json:'🧾',md:'📘',css:'🎨'}[(n.split('.').pop()||'').toLowerCase()]||'📄');
   function openPath(p){if(/\.html?$/i.test(p)){launchViewer(baseName(p),fs.read(p)||'')}else openEditor(p)}
   function launchViewer(name,html){openHtmlApp({id:'view_'+(++uid),name:name,icon:'🌐',html,w:620,h:430})}
@@ -590,7 +575,6 @@ function OSRuntime(CFG){
     }});
   }
 
-  /* ---------- Editor ---------- */
   function openEditor(p){
     const id=p?'edit:'+p:'edit:new'+(++uid);
     return openWindow({id,title:p?baseName(p):'Sin título',icon:'📝',w:660,h:460,build(body,win){
@@ -608,7 +592,6 @@ function OSRuntime(CFG){
     }});
   }
 
-  /* ---------- Monitor ---------- */
   function openSysmon(){
     return openWindow({id:'sysmon',title:'Monitor del sistema',icon:'📊',w:520,h:430,build(body,win){
       const g=h('canvas',{width:480,height:110,style:'width:100%;border-radius:8px;background:rgba(0,0,0,.3)'}),info=h('div',{class:'mono'}),procs=h('div',{});
@@ -624,7 +607,6 @@ function OSRuntime(CFG){
     }});
   }
 
-  /* ---------- Ajustes ---------- */
   function openSettings(){
     return openWindow({id:'settings',title:'Ajustes',icon:'⚙️',w:580,h:520,build(body){
       const set=(k,v)=>{C[k]=v;prefs[k]=v;savePrefs();applyTheme()};
@@ -647,7 +629,6 @@ function OSRuntime(CFG){
     }});
   }
 
-  /* ---------- arranque, bloqueo, apagado ---------- */
   const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   async function bootSeq(){
     const custom=(C.bootLines||'').trim();
@@ -671,7 +652,6 @@ function OSRuntime(CFG){
   }
   function shutdown(){const ov=h('div',{style:'position:absolute;inset:0;z-index:6000;background:#000;display:grid;place-items:center;color:#555;font:14px ui-monospace,monospace;cursor:pointer'},'Sistema apagado. Pulsa para encender.');ov.onclick=()=>location.reload();root.append(ov)}
 
-  /* ---------- API del kernel (objeto global os) ---------- */
   const os={
     name:C.name,version:C.version,config:C,fs,
     notify,openApp:launch,dialog:dlg,on,emit,
@@ -684,7 +664,6 @@ function OSRuntime(CFG){
   window.os=os;
   function runKernel(){const code=(CFG.kernel||'').trim();if(!code)return;try{new Function('os',code)(os)}catch(e){log('error','Kernel: '+e.message);notify('Error en el kernel: '+e.message,'Kernel')}}
 
-  /* ---------- arranque ---------- */
   (async function init(){
     rebuildApps();applyTheme();renderDesk();fit();requestAnimationFrame(wall);
     const tick=()=>{clock.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};tick();setInterval(tick,5000);
@@ -698,9 +677,6 @@ function OSRuntime(CFG){
   })();
 }
 
-/* =====================================================================
-   ESTUDIO  —  editor visual del proyecto
-   ===================================================================== */
 const $=(s,r=document)=>r.querySelector(s);
 function h(tag,attrs,...kids){
   const e=document.createElement(tag),late={};
@@ -717,7 +693,6 @@ const slugOf=n=>String(n||'os').toLowerCase().replace(/[^a-z0-9]+/g,'_');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function download(name,text,mime){const a=h('a',{href:URL.createObjectURL(new Blob([text],{type:mime||'text/plain'})),download:name});document.body.append(a);a.click();a.remove()}
 
-/* ---------- plantillas de apps ---------- */
 const APP_TPL={
 hello:{name:'Hola Mundo',icon:'👋',w:420,h:300,html:`<style>body{padding:20px}h1{color:var(--ac);margin-top:0}button{padding:8px 14px;border-radius:8px;border:1px solid var(--ac);background:transparent;color:var(--ac);cursor:pointer}</style>
 <h1>¡Hola, mundo!</h1>
@@ -815,7 +790,6 @@ const PRESETS=[
  {n:'Atardecer',c:{bg:'#14080f',surface:'#241018',text:'#ffeede',accent:'#ff9a3c',accent2:'#ff3c6e',wallpaper:'aurora',windowStyle:'glass',radius:16,taskbar:'bottom'}}
 ];
 
-/* ---------- proyecto ---------- */
 const LS='forge-studio-project';
 function tplApp(k){const t=APP_TPL[k];return{id:slugOf(t.name),name:t.name,icon:t.icon,w:t.w,h:t.h,desktop:true,html:t.html}}
 function defaultProject(){return{
@@ -842,7 +816,6 @@ function reloadPreview(){frame.srcdoc=buildOS(P,{preview:true,fast:$('#fast').ch
 function update(){try{localStorage.setItem(LS,JSON.stringify(P))}catch(e){}clearTimeout(t1);t1=setTimeout(reloadPreview,450)}
 frame.addEventListener('load',()=>{if(lastLaunch&&$('#autorun').checked)frame.contentWindow.postMessage({__studio:'launch',id:lastLaunch},'*')});
 
-/* ---------- helpers de formulario ---------- */
 const sec=(t,...k)=>h('section',{class:'sec'},h('h4',{},t),...k);
 const g2=(...k)=>h('div',{class:'g2'},...k);
 const fText=(l,key,o)=>h('label',{class:'fld'},h('span',{},l),h('input',{class:'in',type:'text',value:P[key]==null?'':P[key],placeholder:(o&&o.ph)||'',oninput:e=>{P[key]=e.target.value;update()}}));
@@ -854,7 +827,6 @@ const fRange=(l,key,a,b)=>h('label',{class:'fld'},h('span',{},l+': '),h('input',
 function tabKey(ta){ta.addEventListener('keydown',e=>{if(e.key==='Tab'){e.preventDefault();ta.setRangeText('  ',ta.selectionStart,ta.selectionEnd,'end');ta.dispatchEvent(new Event('input'))}})}
 const BUILTIN_NAMES={terminal:'Terminal',files:'Archivos',editor:'Editor',sysmon:'Monitor',settings:'Ajustes'};
 
-/* ---------- pestañas ---------- */
 const TABS=[['id','🎨 Identidad'],['apps','📦 Apps'],['files','🗂️ Archivos'],['kernel','⚙️ Kernel'],['tpl','🧩 Plantillas']];
 function renderTabs(){$('#tabs').replaceChildren(...TABS.map(([k,l])=>h('button',{class:'tab'+(k===tab?' on':''),onclick:()=>{tab=k;renderTabs();renderBody()}},l)))}
 function renderBody(){const b=$('#tabbody');b.replaceChildren();({id:tabId,apps:tabApps,files:tabFiles,kernel:tabKernel,tpl:tabTpl})[tab](b)}
@@ -941,7 +913,6 @@ function tabTpl(b){
     h('button',{class:'btn',onclick:()=>{P=Object.assign(defaultProject(),{apps:[],autostart:[],files:[],kernel:'// Tu kernel vacío\n',name:'OSVacio'});curApp=0;update();renderBody()}},'Empezar desde cero (sin apps)'))));
 }
 
-/* ---------- cabecera, preview, consola ---------- */
 $('#bNew').onclick=()=>{if(confirm('¿Crear un proyecto nuevo? Se perderán los cambios no exportados.')){P=defaultProject();curApp=0;update();renderTabs();renderBody()}};
 $('#bSave').onclick=()=>download(slugOf(P.name)+'.osforge.json',JSON.stringify(P,null,2),'application/json');
 $('#bOpen').onclick=()=>$('#fileIn').click();
